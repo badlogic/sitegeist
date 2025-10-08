@@ -102,8 +102,7 @@ export class SkillsRepository {
 	matchesAnyPattern(url: string, patterns: string[]): boolean {
 		try {
 			const urlObj = new URL(url);
-			// Normalize hostname by removing common prefixes
-			const hostname = urlObj.hostname.replace(/^(www\.|app\.|mail\.|m\.)/, "");
+			const hostname = urlObj.hostname;
 			const path = urlObj.pathname;
 
 			// Test against all patterns
@@ -113,8 +112,12 @@ export class SkillsRepository {
 				const domainPattern = parts[0];
 				const pathPattern = parts.length > 1 ? "/" + parts.slice(1).join("/") : "";
 
+				// Normalize both hostname and pattern by removing www. prefix
+				const normalizedHostname = hostname.replace(/^www\./, "");
+				const normalizedPattern = domainPattern.replace(/^www\./, "");
+
 				// Match domain part
-				const domainMatches = minimatch(hostname, domainPattern, { nocase: true });
+				const domainMatches = minimatch(normalizedHostname, normalizedPattern, { nocase: true });
 
 				// If no path pattern specified, just match domain
 				if (!pathPattern || pathPattern === "/") {
