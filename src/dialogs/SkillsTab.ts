@@ -10,6 +10,8 @@ export class SkillsTab extends SettingsTab {
 	private filteredSkills: Skill[] = [];
 	private searchQuery = "";
 	private editingSkill: Skill | null = null;
+	private importConflicts: { skill: Skill; selected: boolean }[] = [];
+	private importedSkills: Skill[] = [];
 
 	getTabName(): string {
 		return this.label;
@@ -77,6 +79,97 @@ export class SkillsTab extends SettingsTab {
 	updateEditField(field: keyof Skill, value: string | string[]) {
 		if (!this.editingSkill) return;
 		this.editingSkill = { ...this.editingSkill, [field]: value };
+		this.requestUpdate();
+	}
+
+	async exportSkills() {
+		const storage = getSitegeistStorage();
+		const allSkills = await storage.skills.listSkills().then(list =>
+			Promise.all(list.map(s => storage.skills.getSkill(s.name))).then(skills => skills.filter(Boolean) as Skill[])
+		);
+
+		const json = JSON.stringify(allSkills, null, 2);
+		const blob = new Blob([json], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `sitegeist-skills-${new Date().toISOString().split("T")[0]}.json`;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	async importSkills() {
+		const input = document.createElement("input");
+		input.type = "file";
+		input.accept = "application/json,.json";
+		input.onchange = async (e) => {
+			const file = (e.target as HTMLInputElement).files?.[0];
+			if (!file) return;
+
+			try {
+				const text = await file.text();
+				const imported = JSON.parse(text) as Skill[];
+
+				if (!Array.isArray(imported)) {
+					alert("Invalid skills file: expected an array of skills");
+					return;
+				}
+
+				// Store imported skills for later
+				this.importedSkills = imported;
+
+				// Check for conflicts
+				const storage = getSitegeistStorage();
+				const conflicts: { skill: Skill; selected: boolean }[] = [];
+
+				for (const skill of imported) {
+					const existing = await storage.skills.getSkill(skill.name);
+					if (existing) {
+						conflicts.push({ skill, selected: true });
+					}
+				}
+
+				if (conflicts.length > 0) {
+					// Show conflict resolution UI
+					this.importConflicts = conflicts;
+					this.requestUpdate();
+				} else {
+					// No conflicts, import all
+					await this.performImport(imported);
+				}
+			} catch (error) {
+				alert(`Failed to import skills: ${(error as Error).message}`);
+			}
+		};
+		input.click();
+	}
+
+	async performImport(skills: Skill[]) {
+		const storage = getSitegeistStorage();
+
+		// Filter out skills that are in conflicts and not selected
+		const conflictNames = new Set(this.importConflicts.filter(c => !c.selected).map(c => c.skill.name));
+		const toImport = skills.filter(s => !conflictNames.has(s.name));
+
+		let imported = 0;
+		for (const skill of toImport) {
+			await storage.skills.saveSkill(skill);
+			imported++;
+		}
+
+		this.importConflicts = [];
+		await this.loadSkills();
+		alert(`Imported ${imported} skill(s)`);
+	}
+
+	toggleConflictSelection(index: number) {
+		this.importConflicts[index].selected = !this.importConflicts[index].selected;
+		this.requestUpdate();
+	}
+
+	cancelImport() {
+		this.importConflicts = [];
+		this.importedSkills = [];
 		this.requestUpdate();
 	}
 
@@ -184,12 +277,76 @@ export class SkillsTab extends SettingsTab {
 		`;
 	}
 
+	renderConflictResolution() {
+		return html`
+			<div class="border border-border rounded-lg p-4 bg-card space-y-4">
+				<h3 class="font-semibold text-foreground">Import Conflicts</h3>
+				<p class="text-sm text-muted-foreground">
+					The following skills already exist. Check the skills you want to overwrite:
+				</p>
+
+				<div class="space-y-2">
+					${this.importConflicts.map((conflict, index) => html`
+						<label class="flex items-start gap-3 p-3 border border-border rounded cursor-pointer hover:bg-muted/50">
+							<input
+								type="checkbox"
+								.checked=${conflict.selected}
+								@change=${() => this.toggleConflictSelection(index)}
+								class="mt-1"
+							/>
+							<div class="flex-1">
+								<div class="font-medium text-foreground">${conflict.skill.name}</div>
+								<div class="text-xs text-muted-foreground">${conflict.skill.domainPatterns.join(", ")}</div>
+								<div class="text-sm text-muted-foreground mt-1">${conflict.skill.shortDescription}</div>
+							</div>
+						</label>
+					`)}
+				</div>
+
+				<div class="flex justify-end gap-2">
+					${Button({
+						variant: "outline",
+						onClick: () => this.cancelImport(),
+						children: "Cancel"
+					})}
+					${Button({
+						variant: "default",
+						onClick: () => this.performImport(this.importedSkills),
+						children: "Import Selected"
+					})}
+				</div>
+			</div>
+		`;
+	}
+
 	render() {
+		// Show conflict resolution UI if there are conflicts
+		if (this.importConflicts.length > 0) {
+			return html`
+				<div class="flex flex-col gap-6">
+					${this.renderConflictResolution()}
+				</div>
+			`;
+		}
+
 		return html`
 			<div class="flex flex-col gap-6">
 				<p class="text-sm text-muted-foreground">
 					Manage site skills - reusable JavaScript libraries for domain-specific automation.
 				</p>
+
+				<div class="flex gap-2">
+					${Button({
+						variant: "outline",
+						onClick: () => this.exportSkills(),
+						children: "Export Skills"
+					})}
+					${Button({
+						variant: "outline",
+						onClick: () => this.importSkills(),
+						children: "Import Skills"
+					})}
+				</div>
 
 				${Input({
 					type: "text",
