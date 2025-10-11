@@ -15,10 +15,17 @@ window.addEventListener("message", (event) => {
 				throw new Error(`HTML parse error: ${parserError.textContent}`);
 			}
 
-			// Validate JavaScript in all script tags
+			// Validate JavaScript in all script tags (except type="module")
 			const scriptTags = Array.from(doc.querySelectorAll("script"));
 			for (let i = 0; i < scriptTags.length; i++) {
 				const scriptContent = scriptTags[i].textContent || "";
+				const scriptType = scriptTags[i].getAttribute("type");
+
+				// Skip validation for module scripts - new Function() can't validate module syntax
+				if (scriptType === "module") {
+					continue;
+				}
+
 				if (scriptContent.trim()) {
 					try {
 						// Use Function constructor to validate syntax without executing
