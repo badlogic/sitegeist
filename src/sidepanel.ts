@@ -74,20 +74,34 @@ export function getPort(): chrome.runtime.Port {
 // HELPERS
 // ============================================================================
 
-// Send message via port and wait for response
-function sendPortMessage<T = any>(message: any): Promise<T> {
-	return new Promise((resolve) => {
-		const listener = (msg: any) => {
-			// Match response by type
-			if (
-				(message.type === "acquireLock" && msg.type === "lockResult") ||
-				(message.type === "getLockedSessions" && msg.type === "lockedSessions")
-			) {
-				port.onMessage.removeListener(listener);
-				resolve(msg);
+// Global message handler for port responses
+const portResponseHandlers = new Map<string, (msg: any) => void>();
+
+function setupPortMessageHandler() {
+	port.onMessage.addListener((msg) => {
+		// Handle close-yourself command
+		if (msg.type === "close-yourself") {
+			window.close();
+			return;
+		}
+
+		// Handle responses for sendPortMessage
+		if (msg.type === "lockResult" || msg.type === "lockedSessions") {
+			const handler = portResponseHandlers.get(msg.type);
+			if (handler) {
+				handler(msg);
 			}
-		};
-		port.onMessage.addListener(listener);
+		}
+	});
+}
+
+// Send message via port and wait for response
+function sendPortMessage<T = any>(message: any, responseType: string): Promise<T> {
+	return new Promise((resolve) => {
+		portResponseHandlers.set(responseType, (msg: any) => {
+			portResponseHandlers.delete(responseType);
+			resolve(msg);
+		});
 		port.postMessage(message);
 	});
 }
@@ -523,13 +537,8 @@ async function initApp() {
 	// Create port connection for lock management
 	port = browserAPI.runtime.connect({ name: `sidepanel:${currentWindowId}` });
 
-	// Handle messages from background
-	port.onMessage.addListener((msg) => {
-		if (msg.type === "close-yourself") {
-			// Keyboard shortcut toggle - close sidepanel
-			window.close();
-		}
-	});
+	// Set up message handler for port
+	setupPortMessageHandler();
 
 	// Request persistent storage
 	// if (storage.sessions) {
@@ -622,11 +631,14 @@ async function initApp() {
 		const latestSessionId = await storage.sessions.getLatestSessionId();
 		if (latestSessionId) {
 			// Try to acquire lock for latest session
-			const lockResponse = await sendPortMessage<{ success: boolean }>({
-				type: "acquireLock",
-				sessionId: latestSessionId,
-				windowId: currentWindowId,
-			});
+			const lockResponse = await sendPortMessage<{ success: boolean }>(
+				{
+					type: "acquireLock",
+					sessionId: latestSessionId,
+					windowId: currentWindowId,
+				},
+				"lockResult",
+			);
 
 			if (lockResponse?.success) {
 				sessionIdFromUrl = latestSessionId;
@@ -641,11 +653,14 @@ async function initApp() {
 		const sessionData = await storage.sessions.loadSession(sessionIdFromUrl);
 		if (sessionData) {
 			// Try to acquire lock if we don't already have it (in case user navigated directly via URL)
-			const lockResponse = await sendPortMessage<{ success: boolean }>({
-				type: "acquireLock",
-				sessionId: sessionIdFromUrl,
-				windowId: currentWindowId,
-			});
+			const lockResponse = await sendPortMessage<{ success: boolean }>(
+				{
+					type: "acquireLock",
+					sessionId: sessionIdFromUrl,
+					windowId: currentWindowId,
+				},
+				"lockResult",
+			);
 
 			if (!lockResponse?.success) {
 				// Session is locked in another window - show landing page instead
