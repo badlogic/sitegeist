@@ -440,7 +440,7 @@ const createAgent = async (
 						},
 						"lockResult",
 					).then((lockResponse: any) => {
-						if (!lockResponse?.success) {
+						if (!lockResponse.success) {
 							console.warn(
 								"Failed to acquire lock for newly created session",
 								currentSessionId,
@@ -904,7 +904,7 @@ async function initApp() {
 		const latestSessionId = await storage.sessions.getLatestSessionId();
 		if (latestSessionId) {
 			// Try to acquire lock for latest session
-			const lockResponse = await port.sendMessage<{ success: boolean }>(
+			const lockResponse = await port.sendMessage(
 				{
 					type: "acquireLock",
 					sessionId: latestSessionId,
@@ -913,7 +913,7 @@ async function initApp() {
 				"lockResult",
 			);
 
-			if (lockResponse?.success) {
+			if (lockResponse.success) {
 				sessionIdFromUrl = latestSessionId;
 				// Update URL to include the latest session
 				updateUrl(latestSessionId);
@@ -926,7 +926,7 @@ async function initApp() {
 		const sessionData = await storage.sessions.loadSession(sessionIdFromUrl);
 		if (sessionData) {
 			// Try to acquire lock if we don't already have it (in case user navigated directly via URL)
-			const lockResponse = await port.sendMessage<{ success: boolean }>(
+			const lockResponse = await port.sendMessage(
 				{
 					type: "acquireLock",
 					sessionId: sessionIdFromUrl,
@@ -935,7 +935,7 @@ async function initApp() {
 				"lockResult",
 			);
 
-			if (!lockResponse?.success) {
+			if (!lockResponse.success) {
 				// Session is locked in another window - show landing page instead
 				await createAgent();
 				if (agent) {

@@ -75,11 +75,11 @@ export class SitegeistSessionListDialog extends DialogBase {
 			this.sessions = await storage.sessions.getAllMetadata();
 
 			// Get lock information from background via port
-			const lockResponse = await port.sendMessage<{ locks: Record<string, number> }>(
+			const lockResponse = await port.sendMessage(
 				{ type: "getLockedSessions" },
 				"lockedSessions"
 			);
-			this.sessionLocks = lockResponse?.locks || {};
+			this.sessionLocks = lockResponse.locks || {};
 		} catch (err) {
 			console.error("Failed to load sessions:", err);
 			this.sessions = [];

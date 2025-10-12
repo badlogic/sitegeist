@@ -1,3 +1,13 @@
+import type {
+	AcquireLockMessage,
+	BackgroundToSidepanelMessage,
+	CloseYourselfMessage,
+	GetLockedSessionsMessage,
+	LockedSessionsMessage,
+	LockResultMessage,
+	SidepanelToBackgroundMessage,
+} from "./port.js";
+
 // Cross-browser API compatibility
 // @ts-expect-error - browser global exists in Firefox, chrome in Chrome
 const browserAPI: typeof chrome & typeof browser =
@@ -44,7 +54,7 @@ browserAPI.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
 	const windowId = Number(match[1]);
 	windowPorts.set(windowId, port);
 
-	port.onMessage.addListener((msg: any) => {
+	port.onMessage.addListener((msg: SidepanelToBackgroundMessage) => {
 		if (msg.type === "acquireLock") {
 			const { sessionId, windowId: reqWindowId } = msg;
 
@@ -54,27 +64,36 @@ browserAPI.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
 				ownerWindowId !== undefined && windowPorts.has(ownerWindowId);
 
 			// Grant lock if: no owner, owner port dead, or requesting window is owner
-			if (
-				!ownerWindowId ||
+			const response: LockResultMessage = !ownerWindowId ||
 				!ownerPortAlive ||
 				ownerWindowId === reqWindowId
-			) {
-				sessionLocks.set(sessionId, reqWindowId);
-				port.postMessage({ type: "lockResult", sessionId, success: true });
-			} else {
-				port.postMessage({
+				? {
+					type: "lockResult",
+					sessionId,
+					success: true,
+				}
+				: {
 					type: "lockResult",
 					sessionId,
 					success: false,
 					ownerWindowId,
-				});
+				};
+
+			if (response.success) {
+				sessionLocks.set(sessionId, reqWindowId);
 			}
+
+			port.postMessage(response);
 		} else if (msg.type === "getLockedSessions") {
 			const locks: Record<string, number> = {};
 			for (const [sid, wid] of sessionLocks.entries()) {
 				locks[sid] = wid;
 			}
-			port.postMessage({ type: "lockedSessions", locks });
+			const response: LockedSessionsMessage = {
+				type: "lockedSessions",
+				locks,
+			};
+			port.postMessage(response);
 		}
 	});
 
@@ -116,7 +135,8 @@ if (browserAPI.commands) {
 					if (port) {
 						// Sidepanel is open - tell it to close itself
 						try {
-							port.postMessage({ type: "close-yourself" });
+							const closeMessage: CloseYourselfMessage = { type: "close-yourself" };
+							port.postMessage(closeMessage);
 						} catch {
 							// Port already disconnected
 						}
