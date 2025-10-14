@@ -1,9 +1,10 @@
 import { Button, icon, Switch } from "@mariozechner/mini-lit";
 import { getModel } from "@mariozechner/pi-ai";
 import { html, render } from "lit";
-import { ArrowLeft, Play, Bug, Sparkles } from "lucide";
+import { ArrowLeft, Play, Bug, Sparkles, MousePointer2 } from "lucide";
 import { setAppStorage } from "@mariozechner/pi-web-ui";
 import { SitegeistAppStorage } from "./storage/app-storage.js";
+import { selectElementTool } from "./tools/select-element.js";
 import "./debug/ReplPanel.js";
 import "./debug/BrowserReplPanel.js";
 
@@ -74,6 +75,17 @@ const renderDebugPage = async () => {
 		renderDebugPage(); // Re-render to update UI
 	};
 
+	const triggerSelectElement = async () => {
+		try {
+			const result = await selectElementTool.execute("debug-test", {});
+			console.log("[debug] Select element result:", result);
+			alert(`Selected element:\n${result.output}`);
+		} catch (error) {
+			console.error("[debug] Select element error:", error);
+			alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
+		}
+	};
+
 	const debugHtml = html`
 		<div class="w-full h-full flex flex-col bg-background text-foreground overflow-hidden">
 			<!-- Header -->
@@ -117,6 +129,25 @@ const renderDebugPage = async () => {
 			<!-- Debug content -->
 			<div class="flex-1 overflow-auto p-4">
 				<div class="space-y-6">
+					<!-- Element Picker Tool Section -->
+					<div>
+						<h2 class="text-lg font-semibold mb-3">Element Picker Tool</h2>
+						<div class="border border-border rounded-lg bg-card p-4">
+							<p class="text-sm text-muted-foreground mb-3">
+								Manually trigger the select_element tool to test element picking on the active tab.
+							</p>
+							${Button({
+								variant: "outline",
+								size: "default",
+								children: html`<span class="flex items-center gap-2"
+									>${icon(MousePointer2, "sm")} <span>Launch Element Picker</span></span
+								>`,
+								onClick: triggerSelectElement,
+								title: "Open element picker on active tab",
+							})}
+						</div>
+					</div>
+
 					<!-- REPL Panel Section -->
 					<div>
 						<h2 class="text-lg font-semibold mb-3">JavaScript REPL</h2>

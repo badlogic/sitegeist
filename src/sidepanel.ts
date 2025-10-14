@@ -34,7 +34,7 @@ import {
 import { SYSTEM_PROMPT } from "./prompts/tool-prompts.js";
 import { SitegeistAppStorage } from "./storage/app-storage.js";
 import { DebuggerTool } from "./tools/debugger.js";
-import { BrowserJavaScriptTool, skillTool } from "./tools/index.js";
+import { BrowserJavaScriptTool, SelectElementTool, skillTool } from "./tools/index.js";
 import { isToolNavigating, NavigateTool } from "./tools/navigate.js";
 import * as port from "./utils/port.js";
 import "./utils/i18n-extension.js";
@@ -302,6 +302,7 @@ const createAgent = async (
 		},
 		toolsFactory: (agent, _agentInterface, artifactsPanel) => {
 			const navigateTool = new NavigateTool(agent);
+			const selectElementTool = new SelectElementTool();
 			const browserJavaScriptTool = new BrowserJavaScriptTool(
 				artifactsPanel,
 				agent,
@@ -316,6 +317,7 @@ const createAgent = async (
 			// biome-ignore lint/suspicious/noExplicitAny: fine
 			const tools: AgentTool<any, any>[] = [
 				navigateTool,
+				selectElementTool,
 				browserJavaScriptTool,
 				skillTool,
 				extractDocumentTool,

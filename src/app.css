@@ -86,6 +86,14 @@ body {
 	animation: fadeInUp 0.8s ease-out;
 }
 
+.orb-container {
+	background-color: var(--background);
+}
+
+.orb-container canvas {
+	background-color: var(--background) !important;
+}
+
 .rotating-word {
 	animation: fadeInOut 2s ease-in-out infinite;
 }

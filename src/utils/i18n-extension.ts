@@ -73,6 +73,8 @@ declare module "@mariozechner/mini-lit" {
 		"Search sessions...": string;
 		"Total: {count} sessions · {messages} messages · ${cost}": string;
 		"Open tabs": string;
+		"Waiting for selection": string;
+		"Preparing element selector...": string;
 	}
 }
 
@@ -144,6 +146,8 @@ const sitegeistTranslations = {
 		"Search sessions...": "Search sessions...",
 		"Total: {count} sessions · {messages} messages · ${cost}": "Total: {count} sessions · {messages} messages · ${cost}",
 		"Open tabs": "Open tabs",
+		"Waiting for selection": "Waiting for selection",
+		"Preparing element selector...": "Preparing element selector...",
 	},
 	de: {
 		"Permission request failed": "Berechtigungsanfrage fehlgeschlagen",
@@ -212,6 +216,8 @@ const sitegeistTranslations = {
 		"Search sessions...": "Sitzungen durchsuchen...",
 		"Total: {count} sessions · {messages} messages · ${cost}": "Gesamt: {count} Sitzungen · {messages} Nachrichten · ${cost}",
 		"Open tabs": "Offene Tabs",
+		"Waiting for selection": "Warte auf Auswahl",
+		"Preparing element selector...": "Bereite Element-Auswahl vor...",
 	},
 };
 

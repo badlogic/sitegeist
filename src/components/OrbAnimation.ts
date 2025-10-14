@@ -43,6 +43,7 @@ export class OrbAnimation extends LitElement {
 		// Get theme from localStorage
 		const theme = localStorage.getItem("theme") || "dark";
 		const isDark = theme === "dark";
+		const backgroundColor = getComputedStyle(this.container).getPropertyValue("background-color") || "transparent";
 
 		// Scene setup
 		this.scene = new THREE.Scene();
@@ -57,9 +58,10 @@ export class OrbAnimation extends LitElement {
 		this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
 		this.renderer.setPixelRatio(window.devicePixelRatio);
 		this.renderer.setClearColor(0x000000, 0);
+		this.renderer.domElement.style.backgroundColor = backgroundColor;
 		this.container.appendChild(this.renderer.domElement);
 
-		this.camera.position.z = 5;
+		this.camera.position.z = 4.5;
 
 		// Vertex shader with morphing distortion
 		const vertexShader = `

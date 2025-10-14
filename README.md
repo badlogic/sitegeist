@@ -101,3 +101,4 @@ MIT
 - docs/storage.md - Storage architecture with IndexedDB backend, stores for sessions, settings, provider keys, and skills
 - docs/prompts.md - Centralized prompts and tool descriptions for the agent (system prompt, tool descriptions, guidelines)
 - docs/multi-window.md - Multi-window session management with port-based locking, automatic cleanup, and keyboard shortcuts
+- docs/i18n.md - Internationalization system for adding translations (English and German)

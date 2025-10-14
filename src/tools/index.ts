@@ -8,6 +8,7 @@ import {
 } from "@mariozechner/pi-web-ui";
 import "./browser-javascript.js"; // Import for side effects (registers renderer)
 import "./skill.js";
+import "./select-element.js"; // Import for side effects (registers renderer)
 
 // Register all built-in tool renderers
 registerToolRenderer("calculate", new CalculateRenderer());
@@ -22,3 +23,4 @@ export {
 	requestUserScriptsPermission,
 } from "./browser-javascript.js";
 export { skillTool } from "./skill.js";
+export { SelectElementTool, selectElementTool } from "./select-element.js";

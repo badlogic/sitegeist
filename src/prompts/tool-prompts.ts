@@ -28,6 +28,12 @@ Help users automate web tasks, extract data from pages, process files, and creat
 - Waits for page load and returns available skills automatically
 - After navigation completes, continue immediately with next step
 
+**select_element** - Let user visually select a DOM element using DevTools-style picker
+- Use when: User says "this element", "that button" without providing details
+- Returns: CSS selector, XPath, HTML structure, bounding box, computed styles
+- Pattern: Call select_element → Wait for user to click element → Use returned selector in browser_javascript
+- Example: User: "Extract data from that table" → You: Call select_element → User clicks table → You: Use returned selector in browser_javascript
+
 **browser_javascript** - Execute JavaScript in the active tab as a user script
 - Use for: Interacting with the current webpage (clicking, scraping, filling forms, reading DOM)
 - Has access to: The page's DOM, window object, and all browser APIs
@@ -288,6 +294,44 @@ Examples:
 - Switch to tab 123: { switchToTab: 123 }
 
 CRITICAL: Use this instead of window.location, history.back/forward in browser_javascript.`;
+
+// ============================================================================
+// Select Element Tool
+// ============================================================================
+
+export const SELECT_ELEMENT_DESCRIPTION = `Lets the user visually select a DOM element on the page using browser DevTools-style element picker.
+
+When to use:
+- User needs to point you at a specific element on the page
+- You need element selector/XPath for a specific visual element
+- User says "this element", "that button", or similar without providing details
+- Scraping complex pages where you need visual confirmation of target
+
+How it works:
+1. Tool activates an overlay on the page
+2. User hovers and clicks to select an element
+3. Returns: CSS selector, XPath, HTML structure, computed styles, and bounding box
+4. You can then use the selector in browser_javascript to interact with the element
+
+Output:
+- selector: Optimized CSS selector for the element
+- xpath: XPath expression for the element
+- html: Outer HTML of the element (truncated if >1000 chars)
+- tagName: Element tag name
+- attributes: Element attributes (id, class, data-*, etc.)
+- text: Text content (first 500 chars)
+- boundingBox: Position and size { x, y, width, height }
+- computedStyles: Relevant CSS properties
+- parentChain: Path from <html> to element
+
+CRITICAL: After receiving the element data, use the selector in browser_javascript to interact with it. The selector is optimized to be unique and stable.
+
+Example workflow:
+User: "Extract data from the table on the right"
+You: "Let me help you select that table" → Use select_element
+Tool returns: { selector: "div.content table.data-table", ... }
+You: "I've identified the table. Let me extract the data..." → Use browser_javascript with the selector
+`;
 
 // ============================================================================
 // Skill Management Tool
