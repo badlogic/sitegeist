@@ -1,17 +1,12 @@
 import { Button, icon, Switch } from "@mariozechner/mini-lit";
 import { getModel } from "@mariozechner/pi-ai";
-import { html, render } from "lit";
-import { ArrowLeft, Play, Bug, Sparkles, MousePointer2 } from "lucide";
 import { setAppStorage } from "@mariozechner/pi-web-ui";
+import { html, render } from "lit";
+import { ArrowLeft, Bug, MousePointer2, Play, Sparkles } from "lucide";
+import "./debug/BrowserReplPanel.js";
+import "./debug/ReplPanel.js";
 import { SitegeistAppStorage } from "./storage/app-storage.js";
 import { selectElementTool } from "./tools/select-element.js";
-import "./debug/ReplPanel.js";
-import "./debug/BrowserReplPanel.js";
-
-// Cross-browser API compatibility
-// @ts-expect-error - browser global exists in Firefox, chrome in Chrome
-const browser = globalThis.browser || globalThis.chrome;
-
 
 interface TestPrompt {
 	name: string;
@@ -66,12 +61,12 @@ const TEST_PROMPTS: TestPrompt[] = [
 
 const renderDebugPage = async () => {
 	// Get current debugger mode state
-	const stored = await browser.storage.local.get("debuggerMode");
+	const stored = await chrome.storage.local.get("debuggerMode");
 	let debuggerMode = stored.debuggerMode || false;
 
 	const updateDebuggerMode = async (enabled: boolean) => {
 		debuggerMode = enabled;
-		await browser.storage.local.set({ debuggerMode: enabled });
+		await chrome.storage.local.set({ debuggerMode: enabled });
 		renderDebugPage(); // Re-render to update UI
 	};
 
@@ -138,7 +133,7 @@ const renderDebugPage = async () => {
 							</p>
 							${Button({
 								variant: "outline",
-								size: "default",
+								size: "md",
 								children: html`<span class="flex items-center gap-2"
 									>${icon(MousePointer2, "sm")} <span>Launch Element Picker</span></span
 								>`,

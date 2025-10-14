@@ -1,6 +1,5 @@
 node_modules/
 dist-chrome/
-dist-firefox/
 *.log
 .DS_Store
 sitegeist-latest.zip

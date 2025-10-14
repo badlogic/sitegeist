@@ -1,8 +1,5 @@
 import { Button, icon } from "@mariozechner/mini-lit";
-import type { Agent } from "@mariozechner/pi-web-ui";
-import { ArtifactsPanel } from "@mariozechner/pi-web-ui";
-import { createJavaScriptReplTool } from "@mariozechner/pi-web-ui";
-import { ArtifactsRuntimeProvider } from "@mariozechner/pi-web-ui";
+import { ArtifactsPanel, ArtifactsRuntimeProvider, createJavaScriptReplTool } from "@mariozechner/pi-web-ui";
 import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { Play, Square } from "lucide";
@@ -20,20 +17,16 @@ export class ReplPanel extends LitElement {
 	constructor() {
 		super();
 
-		// Cross-browser API compatibility
-		// @ts-expect-error - browser global exists in Firefox, chrome in Chrome
-		const browserAPI = globalThis.browser || globalThis.chrome;
-
 		// Create artifacts panel with sandbox URL provider for extension CSP
 		this.artifactsPanel = new ArtifactsPanel();
-		this.artifactsPanel.sandboxUrlProvider = () => browserAPI.runtime.getURL("sandbox.html");
+		this.artifactsPanel.sandboxUrlProvider = () => chrome.runtime.getURL("sandbox.html");
 
 		// Create REPL tool with runtime providers and sandbox URL provider for extension CSP
 		this.replTool = createJavaScriptReplTool();
 		this.replTool.runtimeProvidersFactory = () => [
 			new ArtifactsRuntimeProvider(this.artifactsPanel),
 		];
-		this.replTool.sandboxUrlProvider = () => browserAPI.runtime.getURL("sandbox.html");
+		this.replTool.sandboxUrlProvider = () => chrome.runtime.getURL("sandbox.html");
 	}
 
 	createRenderRoot() {
@@ -50,6 +43,7 @@ export class ReplPanel extends LitElement {
 		try {
 			const result = await this.replTool.execute("", { code: this.code, title: "Debug REPL" }, this.abortController.signal);
 			this.output = result.output || "No output";
+		// biome-ignore lint/suspicious/noExplicitAny: fine
 		} catch (error: any) {
 			if (error.message === "Execution aborted") {
 				this.output = "Execution aborted by user";

@@ -19,12 +19,8 @@ export class BrowserReplPanel extends LitElement {
 	constructor() {
 		super();
 
-		// Cross-browser API compatibility
-		// @ts-expect-error - browser global exists in Firefox, chrome in Chrome
-		const browserAPI = globalThis.browser || globalThis.chrome;
-
 		this.artifactsPanel = new ArtifactsPanel();
-		this.artifactsPanel.sandboxUrlProvider = () => browserAPI.runtime.getURL("sandbox.html");
+		this.artifactsPanel.sandboxUrlProvider = () => chrome.runtime.getURL("sandbox.html");
 
 		const agentStub = {
 			appendMessage: () => {},

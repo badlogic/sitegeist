@@ -205,4 +205,3 @@ See [utils/port.ts:173-236](../src/utils/port.ts#L173-L236) for reconnection imp
 
 **Configuration**:
 - [static/manifest.chrome.json](../static/manifest.chrome.json) - Chrome keyboard shortcut: "toggle-sidepanel" with Cmd+Shift+P
-- [static/manifest.firefox.json](../static/manifest.firefox.json) - Firefox keyboard shortcut: "toggle-sidepanel" with Cmd+Shift+P

@@ -9,7 +9,6 @@ const __dirname = dirname(__filename);
 
 // Watch both browser directories
 const distDirChrome = join(__dirname, "..", "dist-chrome");
-const distDirFirefox = join(__dirname, "..", "dist-firefox");
 
 const PORT = 8765; // Fixed port for WebSocket server
 const server = createServer();
@@ -60,34 +59,11 @@ const watcherChrome = watch(
 	},
 );
 
-const watcherFirefox = watch(
-	distDirFirefox,
-	{ recursive: true },
-	(_eventType, filename) => {
-		if (filename) {
-			console.log(`[DevServer] Firefox file changed: ${filename}`);
-
-			// Send reload message to all connected clients
-			const message = JSON.stringify({
-				type: "reload",
-				browser: "firefox",
-				file: filename,
-			});
-			clients.forEach((client) => {
-				if (client.readyState === 1) {
-					// OPEN state
-					client.send(message);
-				}
-			});
-		}
-	},
-);
-
 // Start server
 server.listen(PORT, () => {
 	console.log(`[DevServer] WebSocket server running on ws://localhost:${PORT}`);
 	console.log(
-		`[DevServer] Watching for changes in ${distDirChrome} and ${distDirFirefox}`,
+		`[DevServer] Watching for changes in ${distDirChrome}`,
 	);
 });
 
@@ -95,7 +71,6 @@ server.listen(PORT, () => {
 process.on("SIGINT", () => {
 	console.log("\n[DevServer] Shutting down...");
 	watcherChrome.close();
-	watcherFirefox.close();
 	clients.forEach((client) => client.close());
 	server.close(() => {
 		process.exit(0);

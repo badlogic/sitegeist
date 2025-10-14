@@ -1,22 +1,18 @@
 import { html, type TemplateResult } from "@mariozechner/mini-lit";
 import type { TabInfo } from "../tools/navigate.js";
 
-// Cross-browser API compatibility
-// @ts-expect-error - browser global exists in Firefox, chrome in Chrome
-const browser = globalThis.browser || globalThis.chrome;
-
 export function TabPill(tab: TabInfo, clickable = true): TemplateResult {
 	const handleClick = async () => {
 		if (!clickable) return;
 		try {
 			// Activate the tab
-			await browser.tabs.update(tab.id, { active: true });
+			await chrome.tabs.update(tab.id, { active: true });
 			// Focus the window containing the tab
 			if (tab.active === false) {
-				const tabs = await browser.tabs.query({});
+				const tabs = await chrome.tabs.query({});
 				const foundTab = tabs.find((t: chrome.tabs.Tab) => t.id === tab.id);
 				if (foundTab?.windowId) {
-					await browser.windows.update(foundTab.windowId, { focused: true });
+					await chrome.windows.update(foundTab.windowId, { focused: true });
 				}
 			}
 		} catch (err) {

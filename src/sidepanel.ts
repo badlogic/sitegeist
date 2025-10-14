@@ -693,9 +693,7 @@ async function initApp() {
 	// }
 
 	// Request userScripts permission if not available
-	// @ts-expect-error - browser global exists in Firefox, chrome in Chrome
-	const browserAPIForPermissions = globalThis.browser || globalThis.chrome;
-	if (!browserAPIForPermissions.userScripts) {
+	if (!chrome.userScripts) {
 		await UserScriptsPermissionDialog.request();
 	}
 

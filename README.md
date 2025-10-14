@@ -33,7 +33,7 @@ Start pi-mono dev server (in another terminal):
 
 This will:
 - Watch and rebuild ../pi-mono/packages/ai and ../pi-mono/packages/web-ui
-- Watch and rebuild the extension for both Chrome and Firefox
+- Watch and rebuild the extension for Chrome
 - Watch and rebuild Tailwind CSS
 - Run hot reload server on port 8765
 
@@ -42,7 +42,6 @@ This will:
 Build for specific browser:
 ```bash
 npm run build:chrome   # Build for Chrome/Edge
-npm run build:firefox  # Build for Firefox
 ```
 
 Build for all browsers:
@@ -58,12 +57,6 @@ npm run build
 3. Click "Load unpacked"
 4. Select `sitegeist/dist-chrome/`
 
-**Firefox:**
-1. Open `about:debugging`
-2. Click "This Firefox"
-3. Click "Load Temporary Add-on"
-4. Select any file in `sitegeist/dist-firefox/`
-
 ### Hot Reload
 
 When running `npm run dev`, the extension will automatically reload when you make changes to the source files. The WebSocket server on port 8765 coordinates this.
@@ -71,7 +64,7 @@ When running `npm run dev`, the extension will automatically reload when you mak
 ## Architecture
 
 Key features:
-- Side panel UI (Chrome/Edge) / Sidebar (Firefox)
+- Side panel UI (Chrome/Edge)
 - Real-time navigation tracking
 - Custom message types with renderers
 - Tool execution (browser JavaScript, artifacts)
@@ -83,7 +76,7 @@ Key features:
 - `@mariozechner/pi-ai` - AI provider abstractions and agent loop (file: dependency)
 - `@mariozechner/pi-web-ui` - Reusable chat UI components (file: dependency)
 - `@mariozechner/mini-lit` - Web components library (npm)
-- Chrome/Firefox extension APIs
+- Chrome extension APIs
 - Tailwind CSS v4
 
 ## License

@@ -6,15 +6,15 @@ import {
 	html,
 	i18n,
 } from "@mariozechner/mini-lit";
-import { type SessionMetadata, formatUsage } from "@mariozechner/pi-web-ui";
-import { customElement, state } from "lit/decorators.js";
-import { getAppStorage } from "@mariozechner/pi-web-ui";
-import * as port from "../utils/port.js";
+import { formatUsage, getAppStorage, SessionData, type SessionMetadata } from "@mariozechner/pi-web-ui";
 import Fuse from "fuse.js";
+import { customElement, state } from "lit/decorators.js";
+import * as port from "../utils/port.js";
 
-// Cross-browser API compatibility
-// @ts-expect-error - browser global exists in Firefox, chrome in Chrome
-const browserAPI = globalThis.browser || globalThis.chrome;
+type ExportedSession = {
+	session: SessionData;
+	metadata: SessionMetadata;
+};
 
 @customElement("sitegeist-session-list-dialog")
 export class SitegeistSessionListDialog extends DialogBase {
@@ -67,7 +67,7 @@ export class SitegeistSessionListDialog extends DialogBase {
 		this.loading = true;
 		try {
 			// Get current window ID
-			const currentWindow = await browserAPI.windows.getCurrent();
+			const currentWindow = await chrome.windows.getCurrent();
 			this.currentWindowId = currentWindow.id;
 
 			// Load sessions (already sorted by lastModified index)
@@ -169,40 +169,27 @@ export class SitegeistSessionListDialog extends DialogBase {
 			const storage = getAppStorage();
 			if (!storage.sessions) return;
 
-			const allSessions = [];
+			const exported: ExportedSession[] = [];
 
 			if (sessionId) {
 				// Export single session
 				const session = await storage.sessions.loadSession(sessionId);
 				const metadata = this.sessions.find(s => s.id === sessionId);
 				if (session && metadata) {
-					allSessions.push({
-						id: metadata.id,
-						title: metadata.title,
-						lastModified: metadata.lastModified,
-						state: session,
-					});
+					exported.push({ session, metadata });
 				}
 			} else {
 				// Export all sessions
 				for (const metadata of this.sessions) {
 					const session = await storage.sessions.loadSession(metadata.id);
 					if (session) {
-						allSessions.push({
-							id: metadata.id,
-							title: metadata.title,
-							lastModified: metadata.lastModified,
-							state: session,
-						});
+						exported.push({ session, metadata });
 					}
 				}
 			}
 
-			const exportData = {
-				version: 1,
-				exportDate: new Date().toISOString(),
-				sessions: allSessions,
-			};
+			// Export as single object if one session, array if multiple
+			const exportData = exported.length === 1 ? exported[0] : exported;
 
 			const blob = new Blob([JSON.stringify(exportData, null, 2)], {
 				type: "application/json",
@@ -211,7 +198,7 @@ export class SitegeistSessionListDialog extends DialogBase {
 			const a = document.createElement("a");
 			a.href = url;
 			const filename = sessionId
-				? `sitegeist-session-${allSessions[0]?.title?.replace(/[^a-z0-9]/gi, '-').toLowerCase() || 'export'}.json`
+				? `sitegeist-session-${exported[0]?.metadata.title?.replace(/[^a-z0-9]/gi, '-').toLowerCase() || 'export'}.json`
 				: `sitegeist-sessions-${new Date().toISOString().split("T")[0]}.json`;
 			a.download = filename;
 			a.click();
@@ -298,13 +285,11 @@ export class SitegeistSessionListDialog extends DialogBase {
 				const text = await file.text();
 				const importData = JSON.parse(text);
 
-				// Handle both array format (legacy) and object format with version
-				let sessionsToImport = [];
-				if (Array.isArray(importData)) {
-					sessionsToImport = importData;
-				} else if (importData.version && importData.sessions) {
-					sessionsToImport = importData.sessions;
-				} else {
+				// Handle single ExportedSession or array of ExportedSession
+				const sessionsToImport: ExportedSession[] = Array.isArray(importData) ? importData : [importData];
+
+				// Validate format
+				if (!sessionsToImport.every(s => s.session && s.metadata)) {
 					alert(i18n("Invalid import file format"));
 					return;
 				}
@@ -314,7 +299,7 @@ export class SitegeistSessionListDialog extends DialogBase {
 
 				// Check for duplicates
 				const existingIds = new Set(this.sessions.map(s => s.id));
-				const duplicates = sessionsToImport.filter((s: any) => existingIds.has(s.id));
+				const duplicates = sessionsToImport.filter(s => existingIds.has(s.metadata.id));
 
 				let duplicateAction: 'skip' | 'overwrite' | null = null;
 				if (duplicates.length > 0) {
@@ -327,25 +312,24 @@ export class SitegeistSessionListDialog extends DialogBase {
 
 				let imported = 0;
 				let skipped = 0;
-				for (const sessionData of sessionsToImport) {
+				for (const { session, metadata } of sessionsToImport) {
 					try {
-						const isDuplicate = existingIds.has(sessionData.id);
+						const isDuplicate = existingIds.has(metadata.id);
 
 						if (isDuplicate && duplicateAction === 'skip') {
 							skipped++;
 							continue;
 						}
 
-						// Use original ID if not duplicate, or if overwriting
+						// Save with metadata ID and session data
 						await storage.sessions.saveSession(
-							sessionData.id,
-							sessionData.state,
-							undefined,
-							sessionData.title,
+							metadata.id,
+							session,
+							metadata,
 						);
 						imported++;
 					} catch (err) {
-						console.error(`Failed to import session ${sessionData.title}:`, err);
+						console.error(`Failed to import session ${metadata.title}:`, err);
 					}
 				}
 

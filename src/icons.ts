@@ -1,11 +1,7 @@
+import { Button, icon } from "@mariozechner/mini-lit";
 import { html, render } from "lit";
 import { ArrowLeft, Download } from "lucide";
-import { Button, icon } from "@mariozechner/mini-lit";
 import "./components/OrbAnimation.js";
-
-// Cross-browser API compatibility
-// @ts-expect-error - browser global exists in Firefox, chrome in Chrome
-const browser = globalThis.browser || globalThis.chrome;
 
 interface IconSize {
 	size: number;
@@ -18,8 +14,6 @@ const ICON_SIZES: IconSize[] = [
 	{ size: 128, name: "icon-128.png" },
 ];
 
-let currentOrbElement: HTMLElement | null = null;
-
 function captureOrbAsImage(size: number): Promise<Blob> {
 	return new Promise((resolve, reject) => {
 		// Create a temporary container
@@ -31,7 +25,7 @@ function captureOrbAsImage(size: number): Promise<Blob> {
 		document.body.appendChild(container);
 
 		// Create orb animation element
-		const orb = document.createElement("orb-animation") as any;
+		const orb = document.createElement("orb-animation");
 		container.appendChild(orb);
 
 		// Wait for orb to initialize and render a few frames
@@ -158,9 +152,8 @@ function createPreviewOrb() {
 	previewContainer.innerHTML = "";
 
 	// Create new orb
-	const orb = document.createElement("orb-animation") as any;
+	const orb = document.createElement("orb-animation");
 	previewContainer.appendChild(orb);
-	currentOrbElement = orb;
 }
 
 function renderIconsPage() {
@@ -176,7 +169,7 @@ function renderIconsPage() {
 						variant: "ghost",
 						size: "sm",
 						children: html`<span class="flex items-center gap-2">${icon(ArrowLeft, "sm")} <span>Back to Debug</span></span>`,
-						onClick: () => (window.location.href = "/debug.html"),
+						onClick: () => {window.location.href = "/debug.html"},
 					})}
 					<h1 class="text-3xl font-bold">Icon Generator</h1>
 				</div>
