@@ -5,7 +5,7 @@ import { html, render } from "lit";
 import { ArrowLeft, Bug, MousePointer2, Play, Sparkles } from "lucide";
 import "./debug/ReplPanel.js";
 import { SitegeistAppStorage } from "./storage/app-storage.js";
-import { selectElementTool } from "./tools/select-element.js";
+import { askUserWhichElementTool } from "./tools/ask-user-which-element.js";
 
 interface TestPrompt {
 	name: string;
@@ -75,7 +75,7 @@ const renderDebugPage = async () => {
 
 	const triggerSelectElement = async () => {
 		try {
-			const result = await selectElementTool.execute("debug-test", {});
+			const result = await askUserWhichElementTool.execute("debug-test", {});
 			console.log("[debug] Select element result:", result);
 			alert(`Selected element:\n${result.output}`);
 		} catch (error) {
@@ -132,7 +132,7 @@ const renderDebugPage = async () => {
 						<h2 class="text-lg font-semibold mb-3">Element Picker Tool</h2>
 						<div class="border border-border rounded-lg bg-card p-4">
 							<p class="text-sm text-muted-foreground mb-3">
-								Manually trigger the select_element tool to test element picking on the active tab.
+								Manually trigger the ask_user_which_element tool to test element picking on the active tab.
 							</p>
 							${Button({
 								variant: "outline",

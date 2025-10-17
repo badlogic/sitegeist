@@ -15,7 +15,7 @@ import {
 import { type Static, Type } from "@sinclair/typebox";
 import { createRef, ref } from "lit/directives/ref.js";
 import { Code } from "lucide";
-import { REPL_DESCRIPTION } from "../../prompts/prompts.js";
+import { REPL_TOOL_DESCRIPTION } from "../../prompts/prompts.js";
 import "../../utils/i18n-extension.js";
 
 // Execute JavaScript code with attachments using SandboxedIframe
@@ -135,12 +135,24 @@ export function createReplTool(): AgentTool<typeof replSchema, ReplToolResult> &
 	runtimeProvidersFactory?: () => SandboxRuntimeProvider[];
 	sandboxUrlProvider?: () => string;
 } {
-	return {
+	const tool: AgentTool<typeof replSchema, ReplToolResult> & {
+		runtimeProvidersFactory?: () => SandboxRuntimeProvider[];
+		sandboxUrlProvider?: () => string;
+	} = {
 		label: "JavaScript REPL",
 		name: "repl",
 		runtimeProvidersFactory: () => [], // default to empty array
 		sandboxUrlProvider: undefined, // optional, for browser extensions
-		description: REPL_DESCRIPTION,
+		get description() {
+			// Dynamically get provider descriptions
+			const runtimeProviderDescriptions =
+				tool
+					.runtimeProvidersFactory?.()
+					.map((d) => d.getDescription())
+					.filter((d) => d.trim().length > 0) || [];
+			// Inject into template
+			return REPL_TOOL_DESCRIPTION(runtimeProviderDescriptions);
+		},
 		parameters: replSchema,
 		execute: async function (_toolCallId: string, args: Static<typeof replSchema>, signal?: AbortSignal) {
 			const result = await executeJavaScript(
@@ -192,6 +204,7 @@ export function createReplTool(): AgentTool<typeof replSchema, ReplToolResult> &
 			return { output: result.output, details: { files } };
 		},
 	};
+	return tool;
 }
 
 // Export a default instance for backward compatibility
@@ -286,4 +299,4 @@ export const javascriptReplRenderer: ToolRenderer<ReplParams, ReplResult> = {
 };
 
 // Auto-register the renderer (using "browser_repl" name)
-registerToolRenderer("browser_repl", javascriptReplRenderer);
+registerToolRenderer("repl", javascriptReplRenderer);

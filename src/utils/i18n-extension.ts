@@ -34,8 +34,8 @@ declare module "@mariozechner/mini-lit" {
 		"Created skill": string;
 		"Updating skill": string;
 		"Updated skill": string;
-		"Patching skill": string;
-		"Patched skill": string;
+		"Rewriting skill": string;
+		"Rewritten skill": string;
 		"Deleting skill": string;
 		"Processing skill...": string;
 		"No skills found": string;
@@ -104,8 +104,8 @@ const sitegeistTranslations = {
 		"Created skill": "Created skill",
 		"Updating skill": "Updating skill",
 		"Updated skill": "Updated skill",
-		"Patching skill": "Patching skill",
-		"Patched skill": "Patched skill",
+		"Rewriting skill": "Rewriting skill",
+		"Rewritten skill": "Patched skill",
 		"Deleting skill": "Deleting skill",
 		"Processing skill...": "Processing skill...",
 		"No skills found": "No skills found",
@@ -174,8 +174,8 @@ const sitegeistTranslations = {
 		"Created skill": "Skill erstellt",
 		"Updating skill": "Aktualisiere Skill",
 		"Updated skill": "Skill aktualisiert",
-		"Patching skill": "Patche Skill",
-		"Patched skill": "Skill gepatcht",
+		"Rewriting skill": "Patche Skill",
+		"Rewritten skill": "Skill gepatcht",
 		"Deleting skill": "Lösche Skill",
 		"Processing skill...": "Verarbeite Skill...",
 		"No skills found": "Keine Skills gefunden",

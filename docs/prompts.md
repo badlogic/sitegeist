@@ -118,7 +118,7 @@ Contains Sitegeist-specific prompts:
    - Documentation for browser_repl tool with browserjs()/navigate() helpers
    - ⚠️ **ISSUE**: Manually composed, should use template from web-ui
 
-5. **SELECT_ELEMENT_DESCRIPTION** (line 325)
+5. **ASK_USER_WHICH_ELEMENT_DESCRIPTION** (line 325)
    - Tool description for element selector
    - Simple description (no runtime providers)
 

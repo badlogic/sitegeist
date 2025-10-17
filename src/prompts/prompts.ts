@@ -26,11 +26,11 @@ Help users automate web tasks, extract data from pages, process files, and creat
 - Waits for page load and returns available skills automatically
 - After navigation completes, continue immediately with next step
 
-**select_element** - Let user visually select a DOM element using DevTools-style picker
-- Use when: User says "this element", "that button" without providing details
+**ask_user_which_element** - Ask user to point out a specific DOM element on the page
+- Use when: User says "this element", "that button", "that table" without providing details
 - Returns: CSS selector, XPath, HTML structure, bounding box, computed styles
-- Pattern: Call select_element → Wait for user to click element → Use returned selector in browser_javascript
-- Example: User: "Extract data from that table" → You: Call select_element → User clicks table → You: Use returned selector in browser_javascript
+- Pattern: Call ask_user_which_element → Wait for user to click element → Use returned selector in browser_javascript
+- Example: User: "Extract data from that table" → You: Call ask_user_which_element → User clicks table → You: Use returned selector in browser_javascript
 
 **browser_javascript** - Execute JavaScript in the active tab as a user script
 - Use for: Interacting with the current webpage (clicking, scraping, filling forms, reading DOM)
@@ -182,41 +182,16 @@ Dispatch trusted browser events that cannot be detected or blocked by web pages.
 
 #### When to Use
 - When regular JavaScript clicks/typing don't work (pages detect/block synthetic events)
-- Google Sheets navigation/selection, keyboard shortcuts, WhatsApp automation
-- Sites with anti-bot protection, React apps that ignore synthetic events
 
 #### Do NOT Use For
-- Regular form filling (use normal JavaScript instead - faster and simpler)
 - Sites where synthetic events work fine (test first before using native events)
 
 #### Functions
 - await nativeClick(selector) - Click element using trusted browser event
-  * Finds element via selector, dispatches real mouse click at its center
-  * Example: await nativeClick('button[aria-label="Send"]')
-  * Throws error if selector not found
-
-- await nativeType(selector, text) - Type text into element using trusted keyboard events
-  * Focuses element, types each character as real keyboard input
-  * Example: await nativeType('input[name="email"]', 'test@example.com')
-  * Throws error if selector not found
-
-- await nativePress(key) - Press keyboard key (keyDown + keyUp) using trusted event
-  * Simulates complete key press with proper key codes
-  * Supported keys: ArrowRight, ArrowLeft, ArrowUp, ArrowDown, Enter, Tab, Escape, Backspace, Delete, Home, End, PageUp, PageDown, Shift, Control, Alt, Meta, F1-F12, Space, Insert
-  * Example: await nativePress('Enter')
-  * Example: await nativePress('Escape')
-  * Throws error if key name is not supported
-
-- await nativeKeyDown(key) - Press key down (without releasing)
-  * Use for key combinations and modifier keys
-  * Supported keys: same as nativePress
-  * Must be paired with nativeKeyUp to release the key
-  * Example: await nativeKeyDown('Control')
-
+- await nativeType(selector, text) - Type text using trusted keyboard events
+- await nativePress(key) - Press key (keyDown + keyUp), accepts standard JavaScript key names (e.g., 'Enter', 'a')
+- await nativeKeyDown(key) - Press key down (use with nativeKeyUp for combinations)
 - await nativeKeyUp(key) - Release key
-  * Use after nativeKeyDown to complete key press
-  * Supported keys: same as nativePress
-  * Example: await nativeKeyUp('Control')
 
 #### Example
 Simple click and type:
@@ -241,8 +216,6 @@ await nativeKeyDown('End');
 await nativeKeyUp('End');
 await nativeKeyUp('Shift');
 \`\`\`
-
-Note: These use Chrome's debugger API for trusted events. Regular clicks/typing work fine for most sites.
 `;
 
 // ============================================================================
@@ -252,57 +225,63 @@ Note: These use Chrome's debugger API for trusted events. Regular clicks/typing 
 export const BROWSERJS_RUNTIME_PROVIDER_DESCRIPTION = `
 ### BrowserJS
 
-Execute JavaScript code in the active tab's page context with full DOM access.
+Execute JavaScript in the active tab's page context - your primary interface for reading and interacting with the page.
 
 #### When to Use
-- Scraping data from the current page
-- Interacting with page elements (clicking, typing, reading)
-- Accessing page DOM, window object, and browser APIs
-- Multi-page workflows that need to extract data from each page
+- Inspect or scrape data from the page's DOM
+- Interact with page elements (click, type, fill forms)
 
 #### Do NOT Use For
-- Simple calculations or data transformations (use REPL context instead)
-- Processing user attachments (not available in page context)
-- Creating artifacts from scratch (do that in REPL context, use browserjs only to extract data)
+- Tasks that don't need page access (use REPL instead)
+- Navigation (use navigate() in REPL code or navigate tool instead)
+
+#### CRITICAL - Function Serialization
+The function is **serialized** and executed in the page context. This means:
+
+**What works:**
+- ✅ MUST pass data as parameters (JSON-serializable only)
+- ✅ CAN use artifact/attachment functions (auto-injected in page context)
+- ✅ CAN use skills for current domain (auto-injected)
+
+**What doesn't work:**
+- ❌ CANNOT access variables from REPL scope (closure doesn't work)
+- ❌ CANNOT navigate - no navigate(), window.location, or history methods inside browserjs()
 
 #### Functions
-- await browserjs(func, ...args) - Execute function in active tab's page context, returns result
-  * Function runs with full access to page DOM and window object
-  * Skills for current domain auto-inject into execution context
-  * Parameters must be JSON-serializable (primitives, objects, arrays)
-  * Return value must be JSON-serializable
-  * Cannot access closure variables - pass all needed data as parameters
-  * Example: const title = await browserjs(() => document.title)
-  * Example with args: const count = await browserjs((sel) => document.querySelectorAll(sel).length, '.product')
+- await browserjs(func, ...args) - Execute function in page, returns JSON-serializable result
 
 #### Example
-Extract page title:
+Simple extraction:
 \`\`\`javascript
 const title = await browserjs(() => document.title);
-console.log('Page title:', title);
 \`\`\`
 
-Scrape data with parameter:
+With parameters (CORRECT):
 \`\`\`javascript
-const products = await browserjs((selector) => {
-  return Array.from(document.querySelectorAll(selector)).map(el => ({
+const selector = '.product';
+const products = await browserjs((sel) => {
+  return Array.from(document.querySelectorAll(sel)).map(el => ({
     name: el.querySelector('h2')?.textContent,
     price: el.querySelector('.price')?.textContent
   }));
-}, '.product-card');
+}, selector);  // Pass as parameter
 \`\`\`
 
-Multi-page scraping workflow:
+Using artifacts inside browserjs (CORRECT):
 \`\`\`javascript
-const allData = [];
-for (let page = 1; page <= 3; page++) {
-  await navigate({ url: \`https://example.com/page/\${page}\` });
-  const pageData = await browserjs(() => {
-    return Array.from(document.querySelectorAll('.item')).map(item => item.textContent);
-  });
-  allData.push(...pageData);
-}
-await createOrUpdateArtifact('scraped-data.json', allData);
+await browserjs(async () => {
+  const items = Array.from(document.querySelectorAll('.item')).map(el => el.textContent);
+  await createOrUpdateArtifact('data.json', items);  // Auto-injected!
+});
+\`\`\`
+
+Closure trap (WRONG):
+\`\`\`javascript
+const selector = '.product';
+await browserjs(() => {
+  // selector is undefined! Function was serialized.
+  return document.querySelectorAll(selector).length;
+});
 \`\`\`
 `;
 
@@ -313,53 +292,30 @@ await createOrUpdateArtifact('scraped-data.json', allData);
 export const NAVIGATE_RUNTIME_PROVIDER_DESCRIPTION = `
 ### Navigate
 
-Navigate the browser to URLs or use browser history from your code.
+Navigate the browser to URLs from your code.
 
 #### When to Use
 - Multi-page scraping workflows that need to visit multiple URLs
 - Automation scripts that navigate between pages
-- Workflows that require browser history navigation (back/forward)
 
 #### Do NOT Use For
 - Single page tasks (just use browserjs on current page)
-- Opening links in new tabs (navigate only works with current tab)
 
 #### Functions
-- await navigate(args) - Navigate browser and wait for page load, returns {finalUrl, title, skills}
-  * Waits for DOMContentLoaded before returning
-  * Returns final URL after any redirects
-  * Returns page title
-  * Returns list of available skills for the URL
-  * Example: await navigate({ url: 'https://example.com' })
-  * Example: await navigate({ history: 'back' })
-  * Example: await navigate({ history: 'forward' })
+- await navigate({ url }) - Navigate to URL and wait for page load, returns {finalUrl, title}
 
 #### Example
-Navigate to URL:
-\`\`\`javascript
-const result = await navigate({ url: 'https://example.com' });
-console.log('Loaded:', result.title);
-console.log('Final URL:', result.finalUrl);
-\`\`\`
-
-Multi-page workflow:
 \`\`\`javascript
 // Visit multiple pages and collect data
 const results = [];
-const urls = ['https://site.com/page1', 'https://site.com/page2', 'https://site.com/page3'];
+const urls = ['https://site.com/page1', 'https://site.com/page2'];
 
 for (const url of urls) {
-  await navigate({ url });
+  const result = await navigate({ url });
   const data = await browserjs(() => document.querySelector('h1').textContent);
-  results.push(data);
+  results.push({ title: result.title, heading: data });
 }
-\`\`\`
-
-History navigation:
-\`\`\`javascript
-await navigate({ history: 'back' });
-const previousPage = await browserjs(() => document.title);
-console.log('Went back to:', previousPage);
+await createOrUpdateArtifact('results.json', results);
 \`\`\`
 `;
 
@@ -367,157 +323,181 @@ console.log('Went back to:', previousPage);
 // Navigate Tool
 // ============================================================================
 
-export const NAVIGATE_TOOL_DESCRIPTION = `Navigate to URLs, manage tabs, or use browser history.
+export const NAVIGATE_TOOL_DESCRIPTION = `# Navigate
 
-Actions:
+Navigate to URLs, manage tabs, or use browser history.
+
+## Actions
 - { url: "https://example.com" } - Navigate to URL in current tab
 - { url: "https://example.com", newTab: true } - Open URL in new tab
 - { history: "back" } or { history: "forward" } - Navigate browser history
 - { listTabs: true } - List all open tabs with IDs, URLs, and titles
 - { switchToTab: <tabId> } - Switch to a specific tab by its ID
 
-Returns final URL, page title, and available skills.
+## Returns
+Final URL, page title, tab ID, and available skills.
 
-Examples:
-- Open Google in new tab: { url: "https://google.com", newTab: true }
-- List all tabs: { listTabs: true }
-- Switch to tab 123: { switchToTab: 123 }
+## Critical
+Use this tool for ALL navigation. NEVER use window.location, history.back/forward, or any navigation code in repl.`;
 
-CRITICAL: Use this instead of window.location, history.back/forward in browser_javascript.`;
+// ============================================================================
+// Ask User Which Element Tool
+// ============================================================================
+
+export const ASK_USER_WHICH_ELEMENT_TOOL_DESCRIPTION = `# Ask User Which Element
+
+Ask user to visually select a DOM element on the page via interactive picker.
+
+## When to Use
+- User says "this element", "that button", "that table" without specifics
+- Need visual confirmation of target element for scraping
+
+## Returns
+CSS selector, XPath, HTML structure, bounding box, computed styles, attributes, text content.
+
+## Critical
+Use the returned selector in browserjs() code within the repl tool to interact with the element.
+`;
 
 // ============================================================================
 // JavaScript REPL Tool
 // ============================================================================
 
-export const JAVASCRIPT_REPL_DESCRIPTION = `Execute JavaScript code in a sandboxed environment with browser orchestration capabilities.
+export const REPL_TOOL_DESCRIPTION = (runtimeProviderDescriptions: string[]) => `# JavaScript REPL
 
-**Primary use cases:**
-1. **Browser orchestration** - Combine navigation and page interaction in a single script using browserjs() and navigate() helpers
-2. **Data processing** - Calculations, transformations, file parsing
-3. **Chart generation** - Create visualizations using libraries like Chart.js
+Execute JavaScript with access to the user's current page and all browser capabilities.
 
-**Browser orchestration helpers:**
+## When to Use
+- **Read or interact with current page** - Extract data, click elements, fill forms via browserjs()
+- **Process data** - User attachments (CSV, Excel, images), calculations, transformations
+- **Generate artifacts** - Charts, images, processed files as intermediate or final outputs
+- **Multi-page workflows** - Navigate and scrape across multiple pages in loops
 
-- await browserjs(func, ...args) - Execute function in the active tab's page context
-  * Function runs with full access to page DOM, window, and all browser APIs
-  * Skills auto-inject based on current tab URL
-  * Parameters must be JSON-serializable (primitives, objects, arrays)
-  * Return values must be JSON-serializable
-  * Example: const title = await browserjs(() => document.title)
-  * Example with args: const count = await browserjs((sel) => document.querySelectorAll(sel).length, '.product')
-  * Cannot access closure variables - pass all needed data as parameters
+## Environment
+- ES2023+ JavaScript (async/await, optional chaining, nullish coalescing, etc.)
+- All browser APIs: DOM, Canvas, WebGL, Fetch, Web Workers, WebSockets, Crypto, etc.
+- Import any npm package: await import('https://esm.run/package-name')
+- Clean sandbox (no page access unless using browserjs())
+- 120 second timeout
 
-- await navigate(args) - Navigate browser and wait for page load
-  * Same parameters as navigate tool: { url }, { history: "back" }, etc.
-  * Waits for DOMContentLoaded before returning
-  * Returns { finalUrl, title, skills }
-  * Example: await navigate({ url: 'https://example.com' })
+## Common Libraries
+- XLSX: const XLSX = await import('https://esm.run/xlsx');
+- CSV: const Papa = (await import('https://esm.run/papaparse')).default;
+- Chart.js: const Chart = (await import('https://esm.run/chart.js/auto')).default;
+- Three.js: const THREE = await import('https://esm.run/three');
+- PDF: const { PDFDocument } = await import('https://esm.run/pdf-lib');
+- Word: const docx = await import('https://esm.run/docx');
 
-**Multi-page orchestration example:**
+## Input
+- { title: "Extract page title", code: "const title = await browserjs(() => document.title);" }
+- { title: "Processing CSV data", code: "const files = listAttachments(); const data = readTextAttachment(files[0].id);" }
+
+## Returns
+Console logs and return value from the code execution.
+
+## Examples
+
+Read current page:
+\`\`\`javascript
+const title = await browserjs(() => document.title);
+const links = await browserjs(() =>
+  Array.from(document.querySelectorAll('a')).map(a => a.href)
+);
+\`\`\`
+
+Multi-page scraping:
 \`\`\`javascript
 const products = [];
 for (let page = 1; page <= 3; page++) {
-  // Navigate to next page
   await navigate({ url: \`https://store.com/page/\${page}\` });
-
-  // Extract data from page
   const pageData = await browserjs(() => {
     return Array.from(document.querySelectorAll('.product')).map(p => ({
       name: p.querySelector('h2').textContent,
       price: p.querySelector('.price').textContent
     }));
   });
-
   products.push(...pageData);
 }
-
-// Save results
 await createOrUpdateArtifact('products.json', products);
-return \`Collected \${products.length} products\`;
 \`\`\`
 
-**Available runtime functions:**
-- await createArtifact(id, content, title?, description?) - Create new artifact
-- await updateArtifact(id, content) - Update existing artifact
-- await getArtifact(id) - Retrieve artifact content
-- await deleteArtifact(id) - Delete artifact
-- await listAttachments() - List user-attached files
-- await readTextAttachment(fileName) - Read text file
-- await readBinaryAttachment(fileName) - Read binary file as Uint8Array
-- console.log/error/warn() - Output to console (visible in tool result)
+## Important Notes
+- Graphics: Use fixed dimensions (800x600), NOT window.innerWidth/Height
+- Chart.js: Set options: { responsive: false, animation: false }
+- Three.js: renderer.setSize(800, 600) with matching aspect ratio
 
-**Execution details:**
-- Clean sandbox environment (no page access unless using browserjs())
-- Can import ESM libraries via dynamic import
-- 120 second timeout for entire script execution
-- Console output tagged with [repl] or [browserjs] prefix
-- Artifacts persist across browserjs() calls within same script
+## Helper Functions (Automatically Available)
 
-**When to use:**
-- Multi-page scraping workflows (navigate → extract → repeat)
-- Complex data processing with browser interaction
-- Scripts that need to maintain state across navigation
-- Combining calculations with page data extraction
-
-**When NOT to use:**
-- Simple text reformatting (just write in your response)
-- Single-page data extraction (use browser_javascript instead)
-- Tasks that don't require browser interaction (use browser_javascript for page-only tasks)`;
-
-// ============================================================================
-// Select Element Tool
-// ============================================================================
-
-export const SELECT_ELEMENT_DESCRIPTION = `Lets the user visually select a DOM element on the page using browser DevTools-style element picker.
-
-When to use:
-- User needs to point you at a specific element on the page
-- You need element selector/XPath for a specific visual element
-- User says "this element", "that button", or similar without providing details
-- Scraping complex pages where you need visual confirmation of target
-
-How it works:
-1. Tool activates an overlay on the page
-2. User hovers and clicks to select an element
-3. Returns: CSS selector, XPath, HTML structure, computed styles, and bounding box
-4. You can then use the selector in browser_javascript to interact with the element
-
-Output:
-- selector: Optimized CSS selector for the element
-- xpath: XPath expression for the element
-- html: Outer HTML of the element (truncated if >1000 chars)
-- tagName: Element tag name
-- attributes: Element attributes (id, class, data-*, etc.)
-- text: Text content (first 500 chars)
-- boundingBox: Position and size { x, y, width, height }
-- computedStyles: Relevant CSS properties
-- parentChain: Path from <html> to element
-
-CRITICAL: After receiving the element data, use the selector in browser_javascript to interact with it. The selector is optimized to be unique and stable.
-
-Example workflow:
-User: "Extract data from the table on the right"
-You: "Let me help you select that table" → Use select_element
-Tool returns: { selector: "div.content table.data-table", ... }
-You: "I've identified the table. Let me extract the data..." → Use browser_javascript with the selector
-`;
+${runtimeProviderDescriptions.join("\n\n")}`;
 
 // ============================================================================
 // Skill Management Tool
 // ============================================================================
 
-export const SKILL_TOOL_DESCRIPTION = `Manage site skills - reusable JavaScript libraries for token-efficient automation.
+export const SKILL_TOOL_DESCRIPTION = `# Skill
 
-**Why Skills Matter:**
-Skills are small, domain-specific libraries you write ONCE and reuse via browser_javascript. Instead of repeatedly analyzing DOM and writing similar code, create a skill with common functions (e.g., "compose email", "list inbox", "send Slack message"). This is ESSENTIAL for token efficiency and faster workflows.
+Manage reusable JavaScript libraries that auto-inject into browser pages for token-efficient automation.
 
-**What Skills Do:**
-- Auto-inject into browser_javascript execution context when domain matches
-- Provide reusable functions for common tasks on a site
+## Why Skills
+Skills are domain-specific libraries you create once and reuse. Instead of repeatedly analyzing DOM and writing similar code, create a skill with common functions (e.g., "compose email", "list inbox"). Essential for token efficiency and faster workflows.
+
+## How Skills Work
+- Auto-inject into repl browserjs() when domain matches
+- Provide reusable functions for common tasks
 - Save tokens by avoiding repetitive DOM exploration
 
-**Example - Gmail Skill:**
-Instead of writing code to compose email every time, create a skill once:
+## Input
+
+**get** - View skill description and examples (library code excluded by default for token efficiency)
+- { action: "get", name: "gmail-basics" }
+- { action: "get", name: "gmail-basics", includeLibraryCode: true } - Include library code for debugging/modification
+
+**list** - List skills
+- { action: "list" } - Skills for current tab URL
+- { action: "list", url: "https://example.com" } - Skills for specific URL
+- { action: "list", url: "" } - All skills (no filtering)
+
+**create** - Create new skill
+- { action: "create", data: { name, domainPatterns, shortDescription, description, examples, library } }
+
+**update** - Update part of skill (string replacement in any field) - PREFERRED
+- { action: "update", name: "skill-name", updates: { library: { old_string: "...", new_string: "..." } } }
+- Faster and more token-efficient than rewrite
+- Supports all fields: name, shortDescription, domainPatterns, library, description, examples
+
+**rewrite** - Rewrite skill (replaces entire fields) - LAST RESORT
+- { action: "rewrite", name: "skill-name", data: { name: "new-name", library: "..." } }
+- Use update instead whenever possible (more token-efficient)
+- Can change name (old skill deleted, new one created)
+
+**delete** - Delete skill
+- { action: "delete", name: "skill-name" }
+
+## Returns
+Success status, skill data, or error message.
+
+## Domain Pattern Matching
+
+Pattern format: "domain.com/path/pattern"
+- Domain matched against hostname (no protocol)
+- Path uses glob patterns:
+  - * (single asterisk) - Single path segment (/spreadsheets/* matches /spreadsheets/abc NOT /spreadsheets/d/123/edit)
+  - ** (double asterisk) - Multiple path segments (/spreadsheets/** matches /spreadsheets/d/123/edit)
+  - ? - Single character
+
+Examples:
+- "docs.google.com/spreadsheets/**" - All Google Sheets URLs
+- "github.com/*/issues" - Issues page for any repo
+- "github.com/**/pull/*" - Any pull request URL
+- "mail.google.com" - Gmail homepage and all subpages
+- "*.example.com/**" - All subdomains
+
+Common mistakes:
+- Using * instead of ** for multi-segment paths
+- Including https:// in pattern
+- Forgetting * doesn't match / characters
+
+## Example - Gmail Skill
 
 {
   action: "create",
@@ -531,132 +511,37 @@ Instead of writing code to compose email every time, create a skill once:
   }
 }
 
-Then use it efficiently:
-- gmail.sendEmail({to: 'user@example.com', subject: 'Test', body: 'Hi'})
-- gmail.listEmails()
+## Creating Skills Workflow
 
-**Actions:**
-
-1. **get** - View skill description and examples
-   { action: "get", name: "gmail-basics" }
-
-   **IMPORTANT:** By default, get returns ONLY description and examples (NOT library code).
-   This is intentional for token efficiency - you don't need to see implementation to use a skill.
-
-   Only add includeLibraryCode: true if you need to:
-   - Debug errors in the skill's implementation
-   - Modify/update the skill's library code
-   - Understand internal implementation details
-
-   Example with library code:
-   { action: "get", name: "gmail-basics", includeLibraryCode: true }
-
-2. **list** - List skills
-   { action: "list" } - Lists skills for current tab URL
-   { action: "list", url: "https://example.com" } - Lists skills for specific URL
-   { action: "list", url: "" } - Lists ALL skills (no filtering)
-
-3. **create** - Create new skill
-   { action: "create", data: { name, domainPatterns, shortDescription, description, examples, library } }
-
-   **Domain Pattern Matching (minimatch):**
-   Domain patterns use minimatch glob syntax for flexible URL matching:
-
-   Pattern format: "domain.com/path/pattern"
-   - Domain is matched against hostname (no protocol needed)
-   - Path uses glob patterns:
-     * "*" (single asterisk) matches single path segment (e.g., /spreadsheets/* matches /spreadsheets/abc but NOT /spreadsheets/d/123/edit)
-     * "**" (double asterisk) matches multiple path segments (e.g., /spreadsheets/** matches /spreadsheets/d/123/edit)
-     * "?" matches single character
-
-   Examples:
-   - "docs.google.com/spreadsheets/**" - All Google Sheets URLs
-   - "github.com/*/issues" - Issues page for any repo (single segment)
-   - "github.com/**/pull/*" - Any pull request URL (multiple segments)
-   - "mail.google.com" or "mail.google.com/" - Gmail homepage and all subpages
-   - "*.example.com/**" - All subdomains of example.com
-
-   Common mistakes:
-   - Using * instead of ** for multi-segment paths
-   - Including https:// in pattern (only use domain.com/path)
-   - Forgetting that * doesn't match / characters
-
-4. **update** - Update skill (merges fields, replaces entire field content)
-   { action: "update", name: "skill-name", data: { library: "..." } }
-
-   **IMPORTANT:** Use 'patch' instead of 'update' whenever possible - it's faster and more token-efficient.
-   Only use 'update' when rewriting entire fields. For small changes, use 'patch'.
-
-5. **patch** - Patch skill (string replacement in specific fields) - **PREFERRED for modifications**
-   { action: "patch", name: "skill-name", patches: { library: { old_string: "...", new_string: "..." } } }
-
-   **Why patch is better:**
-   - Faster: No need to retrieve full library code with includeLibraryCode: true
-   - More token-efficient: Only send the changed portion
-   - Safer: Ensures you're modifying the exact code you expect
-
-   Supported fields: library, description, examples
-
-   Example - Fix a bug in library:
-   {
-     action: "patch",
-     name: "gmail-basics",
-     patches: {
-       library: {
-         old_string: "await new Promise(r => setTimeout(r, 500));",
-         new_string: "await new Promise(r => setTimeout(r, 1000));"
-       }
-     }
-   }
-
-   Example - Update description:
-   {
-     action: "patch",
-     name: "gmail-basics",
-     patches: {
-       description: {
-         old_string: "**Known Limitations:**\n- None",
-         new_string: "**Known Limitations:**\n- Compose button selector may change"
-       }
-     }
-   }
-
-   **When to use patch vs update:**
-   - patch: Small targeted changes (fix bugs, add features, update docs)
-   - update: Complete rewrites or when you need to change multiple unrelated parts
-
-6. **delete** - Delete skill
-   { action: "delete", name: "skill-name" }
-
-**Creating Skills Workflow (CRITICAL - Follow Each Step):**
 1. User wants to automate tasks on a website
-2. Ask what they want to automate and explain what you'll build
+2. Given the page, suggest a few capabilities and iterate with user until they are happy with list
 3. **For EACH capability, follow this testing loop:**
-   a. Figure out how to do the action by inspecting the page
-   b. Write code to perform the action
-   c. **BEFORE testing**: Tell user in plain language what should happen (e.g., "This should click the Send button and the message should appear in your chat")
-   d. Test the code
-   e. **AFTER testing**: Ask "Did that work? What happened on your screen?"
-   f. If it didn't work as expected: fix it and test again
-   g. Test edge cases (empty states, multiple items, etc.)
-   h. Only move to next capability after user confirms this one works
-4. Once ALL capabilities are tested and confirmed working: package them together
-5. Create the skill with all tested code
-6. Include domain variations: ['youtube.com', 'youtu.be'], ['github.com', 'gist.github.com']
+   - Figure out how to do the action by inspecting the page
+   - Use ask_user_which_element if user says "this button" or "that table" without specifics
+   - Write code to perform the action
+   - **BEFORE testing**: Tell user in plain language what should happen (e.g., "This should click the Send button")
+   - Test the code
+   - **AFTER testing**: Ask "Did that work? What happened on your screen?" and STOP and await user confirmation
+   - If it didn't work: fix and test again
+   - Test edge cases
+   - Only move to next capability after user confirms this one works
+4. Once ALL capabilities tested and working: package them together and write the skill in a way that's most useful to yourself
+5. Include domain variations: ['youtube.com', 'youtu.be']
 
-**CRITICAL - Selector Rules:**
-NEVER use text content to find elements in skill library code. Text breaks with different browser languages.
+## Critical - Selector Rules
 
-❌ BAD - Text-based selectors (breaks with language):
+NEVER use text content in selectors (breaks with different browser languages).
+
+❌ BAD - Text-based selectors:
   document.querySelector('button:contains("Send")')
   Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Send')
 
-✅ GOOD - Structural selectors (language-independent):
+✅ GOOD - Structural selectors:
   document.querySelector('button[aria-label]')
   document.querySelector('[data-testid="send-button"]')
   document.querySelector('.compose-footer button.primary')
 
-During skill construction testing:
+During testing:
 - OK to use text matching to FIND the right selector
 - Then inspect element to get structural selector (class, data-*, aria-*, etc.)
 - Save ONLY the structural selector in skill library code
@@ -665,16 +550,12 @@ If only text-based selector exists:
 - Document this limitation in skill description
 - Warn that skill may break with different browser languages
 
-**User Testing is MANDATORY:**
-- You see code, users see the actual webpage - their visual feedback is essential
-- Always describe expected behavior BEFORE testing in plain, non-technical language
+## Critical - User Testing
+
+You see code, users see webpages. Their visual feedback is essential.
+- Always describe expected behavior BEFORE testing in plain language
 - Always ask what they saw AFTER testing
 - Never skip to next capability until current one is confirmed working
-- Never save a skill until ALL capabilities have been tested with the user
-
-**Communication During Skill Creation:**
+- Never save a skill until ALL capabilities tested with user
 - Use plain language: "This clicks the button" not "This calls click()"
-- Focus on visual results: "The message should send" not "The function should execute"
-- Keep user engaged with what they'll SEE, not code internals
-
-If invalid skill name provided, returns list of available skills for domain.`;
+- Focus on visual results: "The message should send" not "The function should execute"`;

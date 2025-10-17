@@ -30,6 +30,7 @@
 		"ollama": "^0.6.0",
 		"pdfjs-dist": "^5.4.296",
 		"three": "^0.180.0",
+		"tsx": "^4.20.6",
 		"xlsx": "^0.18.5"
 	},
 	"devDependencies": {

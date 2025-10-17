@@ -92,7 +92,7 @@ export async function browserMessageTransformer(messages: AppMessage[]): Promise
 
 		if (m.role === "navigation") {
 			const nav = m as NavigationMessage;
-			const tabInfo = nav.tabIndex !== undefined ? ` (tab ${nav.tabIndex})` : "";
+			const tabInfo = nav.tabId !== undefined ? ` (tab id: ${nav.tabId})` : "";
 
 			// Load skills matching this navigation URL
 			const skills = await skillsRepo.getSkillsForUrl(nav.url);

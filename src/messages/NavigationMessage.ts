@@ -15,7 +15,7 @@ export interface NavigationMessage {
 	url: string;
 	title: string;
 	favicon?: string;
-	tabIndex?: number;
+	tabId?: number;
 }
 
 // Extend CustomMessages interface via declaration merging
@@ -119,13 +119,13 @@ export function createNavigationMessage(
 	url: string,
 	title: string,
 	favicon?: string,
-	tabIndex?: number,
+	tabId?: number,
 ): NavigationMessage {
 	return {
 		role: "navigation",
 		url,
 		title,
 		favicon,
-		tabIndex,
+		tabId,
 	};
 }

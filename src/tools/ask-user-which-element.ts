@@ -9,7 +9,7 @@ import {
 import { type Static, Type } from "@sinclair/typebox";
 import { createRef, ref } from "lit/directives/ref.js";
 import { Loader2, MousePointer2 } from "lucide";
-import { SELECT_ELEMENT_DESCRIPTION } from "../prompts/prompts.js";
+import { ASK_USER_WHICH_ELEMENT_TOOL_DESCRIPTION } from "../prompts/prompts.js";
 import "../utils/i18n-extension.js";
 
 // Cross-browser API compatibility
@@ -522,10 +522,10 @@ async function createElementPickerOverlay(message?: string) {
 // TOOL
 // ============================================================================
 
-export class SelectElementTool implements AgentTool<typeof selectElementSchema, SelectElementResult> {
-	label = "Select Element";
-	name = "select_element";
-	description = SELECT_ELEMENT_DESCRIPTION;
+export class AskUserWhichElementTool implements AgentTool<typeof selectElementSchema, SelectElementResult> {
+	label = "Ask User Which Element";
+	name = "ask_user_which_element";
+	description = ASK_USER_WHICH_ELEMENT_TOOL_DESCRIPTION;
 	parameters = selectElementSchema;
 
 	async execute(
@@ -653,7 +653,7 @@ export class SelectElementTool implements AgentTool<typeof selectElementSchema, 
 }
 
 // Create singleton instance
-export const selectElementTool = new SelectElementTool();
+export const askUserWhichElementTool = new AskUserWhichElementTool();
 
 // ============================================================================
 // RENDERER
@@ -859,4 +859,4 @@ export const selectElementRenderer: ToolRenderer<SelectElementParams, SelectElem
 };
 
 // Auto-register the renderer
-registerToolRenderer(selectElementTool.name, selectElementRenderer);
+registerToolRenderer(askUserWhichElementTool.name, selectElementRenderer);

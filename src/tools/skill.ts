@@ -137,10 +137,10 @@ async function validateJavaScriptSyntax(code: string): Promise<{ valid: boolean;
 
 // IMPORTANT: Use StringEnum for Google API compatibility (NOT Type.Union!)
 const skillParamsSchema = Type.Object({
-	action: StringEnum(["get", "list", "create", "update", "patch", "delete"], {
+	action: StringEnum(["get", "list", "create", "rewrite", "update", "delete"], {
 		description: "Action to perform",
 	}),
-	name: Type.Optional(Type.String({ description: "Skill name (required for get/update/delete)" })),
+	name: Type.Optional(Type.String({ description: "Skill name (required for get/rewrite/update/delete)" })),
 	url: Type.Optional(
 		Type.String({
 			description: "URL to filter skills by domain (optional for list action, defaults to current tab URL)",
@@ -171,8 +171,32 @@ const skillParamsSchema = Type.Object({
 			library: Type.String({ description: "JavaScript code to inject" }),
 		}),
 	),
-	patches: Type.Optional(
+	updates: Type.Optional(
 		Type.Object({
+			name: Type.Optional(
+				Type.Object({
+					old_string: Type.String({
+						description: "String to find in skill name",
+					}),
+					new_string: Type.String({ description: "String to replace it with" }),
+				}),
+			),
+			shortDescription: Type.Optional(
+				Type.Object({
+					old_string: Type.String({
+						description: "String to find in short description",
+					}),
+					new_string: Type.String({ description: "String to replace it with" }),
+				}),
+			),
+			domainPatterns: Type.Optional(
+				Type.Object({
+					old_string: Type.String({
+						description: "String to find in domain patterns (searches across all patterns)",
+					}),
+					new_string: Type.String({ description: "String to replace it with" }),
+				}),
+			),
 			library: Type.Optional(
 				Type.Object({
 					old_string: Type.String({
@@ -334,17 +358,17 @@ export const skillTool: AgentTool<typeof skillParamsSchema, any> = {
 					};
 				}
 
-				case "update": {
+				case "rewrite": {
 					if (!args.name) {
 						return {
-							output: "Missing 'name' parameter for update.",
+							output: "Missing 'name' parameter for rewrite.",
 							isError: true,
 							details: {},
 						};
 					}
 					if (!args.data) {
 						return {
-							output: "Missing 'data' parameter for update.",
+							output: "Missing 'data' parameter for rewrite.",
 							isError: true,
 							details: {},
 						};
@@ -371,35 +395,52 @@ export const skillTool: AgentTool<typeof skillParamsSchema, any> = {
 						}
 					}
 
-					// Merge with existing (only update provided fields)
+					// Check if name is being changed
+					const newName = args.data.name;
+					if (newName && newName !== existing.name) {
+						const existingWithNewName = await skillsRepo.getSkill(newName);
+						if (existingWithNewName) {
+							return {
+								output: `Rewrite failed: Skill with name '${newName}' already exists.`,
+								isError: true,
+								details: {},
+							};
+						}
+					}
+
+					// Merge with existing (rewrite provided fields)
 					const updated: Skill = {
 						...existing,
 						...args.data,
-						name: existing.name, // Name cannot be changed
+						name: newName || existing.name, // Allow name change
 						createdAt: existing.createdAt, // Keep original creation date
 						lastUpdated: new Date().toISOString(),
 					};
 
+					// If name changed, delete old and save with new name
+					if (newName && newName !== existing.name) {
+						await skillsRepo.deleteSkill(args.name);
+					}
 					await skillsRepo.saveSkill(updated);
 
 					return {
-						output: `Skill '${args.name}' updated.`,
+						output: `Skill '${args.name}' rewritten.`,
 						isError: false,
 						details: updated,
 					};
 				}
 
-				case "patch": {
+				case "update": {
 					if (!args.name) {
 						return {
-							output: "Missing 'name' parameter for patch.",
+							output: "Missing 'name' parameter for update.",
 							isError: true,
 							details: {},
 						};
 					}
-					if (!args.patches) {
+					if (!args.updates) {
 						return {
-							output: "Missing 'patches' parameter for patch.",
+							output: "Missing 'updates' parameter for update.",
 							isError: true,
 							details: {},
 						};
@@ -414,36 +455,78 @@ export const skillTool: AgentTool<typeof skillParamsSchema, any> = {
 						};
 					}
 
-					// Apply patches to each field
+					// Apply updates to each field
 					const updated: Skill = { ...existing };
+					let newName: string | undefined;
 
-					if (args.patches.library) {
-						const { old_string, new_string } = args.patches.library;
+					if (args.updates.name) {
+						const { old_string, new_string } = args.updates.name;
+						if (!updated.name.includes(old_string)) {
+							return {
+								output: `Update failed: old_string not found in name field.`,
+								isError: true,
+								details: {},
+							};
+						}
+						newName = updated.name.replace(old_string, new_string);
+						// Check if new name already exists
+						const existingWithNewName = await skillsRepo.getSkill(newName);
+						if (existingWithNewName) {
+							return {
+								output: `Update failed: Skill with name '${newName}' already exists.`,
+								isError: true,
+								details: {},
+							};
+						}
+						updated.name = newName;
+					}
+
+					if (args.updates.shortDescription) {
+						const { old_string, new_string } = args.updates.shortDescription;
+						if (!updated.shortDescription.includes(old_string)) {
+							return {
+								output: `Update failed: old_string not found in shortDescription field.`,
+								isError: true,
+								details: {},
+							};
+						}
+						updated.shortDescription = updated.shortDescription.replace(old_string, new_string);
+					}
+
+					if (args.updates.domainPatterns) {
+						const { old_string, new_string } = args.updates.domainPatterns;
+						updated.domainPatterns = updated.domainPatterns.map((pattern) =>
+							pattern.replace(old_string, new_string),
+						);
+					}
+
+					if (args.updates.library) {
+						const { old_string, new_string } = args.updates.library;
 						if (!updated.library.includes(old_string)) {
 							return {
-								output: `Patch failed: old_string not found in library field.`,
+								output: `Update failed: old_string not found in library field.`,
 								isError: true,
 								details: {},
 							};
 						}
 						updated.library = updated.library.replace(old_string, new_string);
 
-						// Validate patched library syntax
+						// Validate updated library syntax
 						const validation = await validateJavaScriptSyntax(updated.library);
 						if (!validation.valid) {
 							return {
-								output: `Patch failed: Syntax error in patched library: ${validation.error}`,
+								output: `Update failed: Syntax error in updated library: ${validation.error}`,
 								isError: true,
 								details: {},
 							};
 						}
 					}
 
-					if (args.patches.description) {
-						const { old_string, new_string } = args.patches.description;
+					if (args.updates.description) {
+						const { old_string, new_string } = args.updates.description;
 						if (!updated.description.includes(old_string)) {
 							return {
-								output: `Patch failed: old_string not found in description field.`,
+								output: `Update failed: old_string not found in description field.`,
 								isError: true,
 								details: {},
 							};
@@ -451,11 +534,11 @@ export const skillTool: AgentTool<typeof skillParamsSchema, any> = {
 						updated.description = updated.description.replace(old_string, new_string);
 					}
 
-					if (args.patches.examples) {
-						const { old_string, new_string } = args.patches.examples;
+					if (args.updates.examples) {
+						const { old_string, new_string } = args.updates.examples;
 						if (!updated.examples.includes(old_string)) {
 							return {
-								output: `Patch failed: old_string not found in examples field.`,
+								output: `Update failed: old_string not found in examples field.`,
 								isError: true,
 								details: {},
 							};
@@ -464,10 +547,15 @@ export const skillTool: AgentTool<typeof skillParamsSchema, any> = {
 					}
 
 					updated.lastUpdated = new Date().toISOString();
+
+					// If name changed, delete old and save with new name
+					if (newName) {
+						await skillsRepo.deleteSkill(args.name);
+					}
 					await skillsRepo.saveSkill(updated);
 
 					return {
-						output: `Skill '${args.name}' patched.`,
+						output: `Skill '${args.name}' updated.`,
 						isError: false,
 						details: updated,
 					};
@@ -591,14 +679,14 @@ export const skillRenderer: ToolRenderer<SkillParams, SkillResultDetails> = {
 				get: i18n("Getting skill"),
 				list: i18n("Listing skills"),
 				create: i18n("Creating skill"),
+				rewrite: i18n("Rewriting skill"),
 				update: i18n("Updating skill"),
-				patch: i18n("Patching skill"),
 				delete: i18n("Deleting skill"),
 			};
 			const headerText = skillName ? `${labels[action!] || action} ${skillName}` : labels[action!] || action || "";
 
-			// For create/update errors, show partial skill data with error at bottom - COLLAPSED BY DEFAULT
-			if ((action === "create" || action === "update") && params?.data) {
+			// For create/rewrite errors, show partial skill data with error at bottom - COLLAPSED BY DEFAULT
+			if ((action === "create" || action === "rewrite") && params?.data) {
 				const contentRef = createRef<HTMLElement>();
 				const chevronRef = createRef<HTMLElement>();
 				const skillName = params?.data?.name;
@@ -703,7 +791,7 @@ export const skillRenderer: ToolRenderer<SkillParams, SkillResultDetails> = {
 				}
 
 				case "create":
-				case "update": {
+				case "rewrite": {
 					// Show all skill fields (including library) - COLLAPSED BY DEFAULT
 					// Skill data comes from result.details (full Skill object)
 					const skillData = skill || params.data || {};
@@ -721,8 +809,8 @@ export const skillRenderer: ToolRenderer<SkillParams, SkillResultDetails> = {
 								? i18n("Created skill")
 								: i18n("Creating skill")
 							: state === "complete"
-								? i18n("Updated skill")
-								: i18n("Updating skill");
+								? i18n("Rewritten skill")
+								: i18n("Rewriting skill");
 
 					const contentRef = createRef<HTMLElement>();
 					const chevronRef = createRef<HTMLElement>();
@@ -740,8 +828,8 @@ export const skillRenderer: ToolRenderer<SkillParams, SkillResultDetails> = {
 					};
 				}
 
-				case "patch": {
-					// Show diffs for patched fields
+				case "update": {
+					// Show diffs for updated fields
 					const skillName = params.name;
 					if (!skillName) {
 						return {
@@ -750,11 +838,11 @@ export const skillRenderer: ToolRenderer<SkillParams, SkillResultDetails> = {
 						};
 					}
 
-					const labelText = state === "complete" ? i18n("Patched skill") : i18n("Patching skill");
+					const labelText = state === "complete" ? i18n("Updated skill") : i18n("Updating skill");
 					const contentRef = createRef<HTMLElement>();
 					const chevronRef = createRef<HTMLElement>();
 
-					const patches = params.patches || {};
+					const updates = params.updates || {};
 					// Use the full skill from result.details if available, otherwise just the name
 					const skillData = skill || { name: skillName };
 
@@ -764,31 +852,31 @@ export const skillRenderer: ToolRenderer<SkillParams, SkillResultDetails> = {
 							${renderCollapsibleHeader(state, Sparkles, renderHeaderWithPill(labelText, skillName, skillData), contentRef, chevronRef, false)}
 							<div ${ref(contentRef)} class="overflow-hidden transition-all duration-200 ease-in-out max-h-0 space-y-3">
 								${
-									patches.library
+									updates.library
 										? html`
 									<div>
 										<div class="text-sm font-medium text-muted-foreground mb-2">${i18n("Library")}</div>
-										${Diff({ oldText: patches.library.old_string, newText: patches.library.new_string })}
+										${Diff({ oldText: updates.library.old_string, newText: updates.library.new_string })}
 									</div>
 								`
 										: ""
 								}
 								${
-									patches.description
+									updates.description
 										? html`
 									<div>
 										<div class="text-sm font-medium text-muted-foreground mb-2">Description</div>
-										${Diff({ oldText: patches.description.old_string, newText: patches.description.new_string })}
+										${Diff({ oldText: updates.description.old_string, newText: updates.description.new_string })}
 									</div>
 								`
 										: ""
 								}
 								${
-									patches.examples
+									updates.examples
 										? html`
 									<div>
 										<div class="text-sm font-medium text-muted-foreground mb-2">${i18n("Examples")}</div>
-										${Diff({ oldText: patches.examples.old_string, newText: patches.examples.new_string })}
+										${Diff({ oldText: updates.examples.old_string, newText: updates.examples.new_string })}
 									</div>
 								`
 										: ""
@@ -830,13 +918,13 @@ export const skillRenderer: ToolRenderer<SkillParams, SkillResultDetails> = {
 
 			switch (action) {
 				case "create":
-				case "update": {
+				case "rewrite": {
 					// Show streaming skill fields as they come in
 					const skillName = data?.name || name;
 					if (!skillName) {
 						const labels: Record<string, string> = {
 							create: i18n("Creating skill"),
-							update: i18n("Updating skill"),
+							rewrite: i18n("Rewriting skill"),
 						};
 						return {
 							content: renderHeader(state, Sparkles, labels[action] || ""),
@@ -846,7 +934,7 @@ export const skillRenderer: ToolRenderer<SkillParams, SkillResultDetails> = {
 
 					const labels: Record<string, string> = {
 						create: i18n("Creating skill"),
-						update: i18n("Updating skill"),
+						rewrite: i18n("Rewriting skill"),
 					};
 					const labelText = labels[action];
 
@@ -865,20 +953,20 @@ export const skillRenderer: ToolRenderer<SkillParams, SkillResultDetails> = {
 						isCustom: false,
 					};
 				}
-				case "patch": {
+				case "update": {
 					// Show streaming diffs as they come in
 					const skillName = name;
 					if (!skillName) {
 						return {
-							content: renderHeader(state, Sparkles, i18n("Patching skill")),
+							content: renderHeader(state, Sparkles, i18n("Updating skill")),
 							isCustom: false,
 						};
 					}
 
-					const labelText = i18n("Patching skill");
+					const labelText = i18n("Updating skill");
 					const contentRef = createRef<HTMLElement>();
 					const chevronRef = createRef<HTMLElement>();
-					const patches = params.patches || {};
+					const updates = params.updates || {};
 					const skillData = { name: skillName };
 
 					return {
@@ -887,31 +975,31 @@ export const skillRenderer: ToolRenderer<SkillParams, SkillResultDetails> = {
 							${renderCollapsibleHeader(state, Sparkles, renderHeaderWithPill(labelText, skillName, skillData), contentRef, chevronRef, false)}
 							<div ${ref(contentRef)} class="overflow-hidden transition-all duration-200 ease-in-out max-h-0 space-y-3">
 								${
-									patches.library
+									updates.library
 										? html`
 									<div>
 										<div class="text-sm font-medium text-muted-foreground mb-2">${i18n("Library")}</div>
-										${Diff({ oldText: patches.library.old_string, newText: patches.library.new_string })}
+										${Diff({ oldText: updates.library.old_string, newText: updates.library.new_string })}
 									</div>
 								`
 										: ""
 								}
 								${
-									patches.description
+									updates.description
 										? html`
 									<div>
 										<div class="text-sm font-medium text-muted-foreground mb-2">Description</div>
-										${Diff({ oldText: patches.description.old_string, newText: patches.description.new_string })}
+										${Diff({ oldText: updates.description.old_string, newText: updates.description.new_string })}
 									</div>
 								`
 										: ""
 								}
 								${
-									patches.examples
+									updates.examples
 										? html`
 									<div>
 										<div class="text-sm font-medium text-muted-foreground mb-2">${i18n("Examples")}</div>
-										${Diff({ oldText: patches.examples.old_string, newText: patches.examples.new_string })}
+										${Diff({ oldText: updates.examples.old_string, newText: updates.examples.new_string })}
 									</div>
 								`
 										: ""

@@ -56,6 +56,7 @@ export interface NavigateResult {
 	finalUrl?: string;
 	title?: string;
 	favicon?: string;
+	tabId?: number;
 	skills?: Array<{ name: string; shortDescription: string }>;
 	tabs?: TabInfo[];
 	switchedToTab?: number;
@@ -152,15 +153,16 @@ export class NavigateTool implements AgentTool<typeof navigateSchema, NavigateRe
 			finalUrl,
 			title,
 			favicon,
+			tabId: targetTabId,
 			skills,
 		};
 
 		// Build output message
 		let output = "";
 		if ("newTab" in args && args.newTab) {
-			output = `Opened in new tab: ${finalUrl}\n`;
+			output = `Opened in new tab: ${finalUrl} (tab ${targetTabId})\n`;
 		} else {
-			output = `Navigated to: ${finalUrl}\n`;
+			output = `Navigated to: ${finalUrl} (tab ${targetTabId})\n`;
 		}
 
 		if (skills.length > 0) {
@@ -404,11 +406,12 @@ export class NavigateTool implements AgentTool<typeof navigateSchema, NavigateRe
 			finalUrl,
 			title,
 			favicon,
+			tabId: numericTabId,
 			skills,
-			switchedToTab: tabId,
+			switchedToTab: numericTabId,
 		};
 
-		let output = `Switched to tab ${tabId}: ${title}\n`;
+		let output = `Switched to tab ${numericTabId}: ${title}\n`;
 		output += `URL: ${finalUrl}\n`;
 
 		if (skills.length > 0) {

@@ -31,7 +31,7 @@ import { createWelcomeMessage, registerWelcomeRenderer } from "./messages/Welcom
 import { SYSTEM_PROMPT } from "./prompts/prompts.js";
 import { SitegeistAppStorage } from "./storage/app-storage.js";
 import { DebuggerTool } from "./tools/debugger.js";
-import { SelectElementTool, skillTool } from "./tools/index.js";
+import { AskUserWhichElementTool, skillTool } from "./tools/index.js";
 import { NativeInputEventsRuntimeProvider } from "./tools/NativeInputEventsRuntimeProvider.js";
 import { isToolNavigating, NavigateTool } from "./tools/navigate.js";
 import { createReplTool } from "./tools/repl/repl.js";
@@ -297,13 +297,13 @@ const createAgent = async (initialState?: Partial<AgentState>, shouldSave = true
 
 			// Only add if URL changed
 			if (!lastNav || lastNav.url !== tab.url) {
-				const navMessage = createNavigationMessage(tab.url, tab.title || "Untitled", tab.favIconUrl, tab.index);
+				const navMessage = createNavigationMessage(tab.url, tab.title || "Untitled", tab.favIconUrl, tab.id);
 				agent.appendMessage(navMessage);
 			}
 		},
 		toolsFactory: (_agent, _agentInterface, _artifactsPanel, runtimeProvidersFactory) => {
 			const navigateTool = new NavigateTool();
-			const selectElementTool = new SelectElementTool();
+			const selectElementTool = new AskUserWhichElementTool();
 
 			// Create extract_document tool with CORS proxy from settings (loaded above)
 			const extractDocumentTool = createExtractDocumentTool();
@@ -517,7 +517,7 @@ chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
 		!tab.url.startsWith("moz-extension://") &&
 		!isToolNavigating()
 	) {
-		const navMessage = createNavigationMessage(tab.url, tab.title || "Untitled", tab.favIconUrl, tab.index);
+		const navMessage = createNavigationMessage(tab.url, tab.title || "Untitled", tab.favIconUrl, tab.id);
 		agent.queueMessage(navMessage);
 		console.log("Queued navigation message for tab switch to", tab.url);
 	}
@@ -538,7 +538,7 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 		!tab.url.startsWith("moz-extension://") &&
 		!isToolNavigating()
 	) {
-		const navMessage = createNavigationMessage(tab.url, tab.title || "Untitled", tab.favIconUrl, tab.index);
+		const navMessage = createNavigationMessage(tab.url, tab.title || "Untitled", tab.favIconUrl, tab.id);
 		agent.queueMessage(navMessage);
 		console.log("Queued navigation message for tab switch to", tab.url);
 	}
