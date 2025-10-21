@@ -1,3 +1,14 @@
 {
-  "signups": []
+  "signups": [
+    {
+      "email": "test@gmail.com",
+      "timestamp": "2025-10-21T18:55:45.880Z",
+      "notified": false
+    },
+    {
+      "email": "foo@bar.com",
+      "timestamp": "2025-10-21T19:01:42.917Z",
+      "notified": false
+    }
+  ]
 }

@@ -38,12 +38,24 @@
    text-align: center;
    font-weight: 600;
    color: var(--foreground);
+   transition: opacity 0.3s ease-in-out;
 }
 
 .rotating-word.block {
    display: block;
    width: 100%;
 }
+
+.rotating-word.fade-out {
+   opacity: 0;
+}
+
+/* CTA word should have no min-width */
+#cta-word {
+   min-width: 0 !important;
+   text-align: left !important;
+}
+
 
 /* Signup button shimmer effect */
 .signup-btn {
@@ -87,6 +99,9 @@
    background: rgba(46, 125, 50, 0.2);
    border: 1px solid rgba(76, 175, 80, 0.5);
    color: var(--foreground);
+   width: fit-content;
+   margin-left: auto;
+   margin-right: auto;
 }
 
 .success-message.visible {

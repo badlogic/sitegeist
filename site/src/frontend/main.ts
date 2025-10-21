@@ -68,14 +68,34 @@ function showError(message: string) {
 	}, 5000);
 }
 
-// Rotating tagline words
+// Rotating tagline words with fade
 const taglineWords = ["automate", "scrape", "research", "transform", "create", "analyze"];
 let currentWordIndex = 0;
 const wordElement = document.getElementById("tagline-word");
 
 if (wordElement) {
 	setInterval(() => {
-		currentWordIndex = (currentWordIndex + 1) % taglineWords.length;
-		wordElement.textContent = taglineWords[currentWordIndex];
+		wordElement.classList.add("fade-out");
+		setTimeout(() => {
+			currentWordIndex = (currentWordIndex + 1) % taglineWords.length;
+			wordElement.textContent = taglineWords[currentWordIndex];
+			wordElement.classList.remove("fade-out");
+		}, 300);
+	}, 2000);
+}
+
+// Rotating CTA words with fade
+const ctaWords = ["automate", "scrape", "research", "transform", "create", "analyze"];
+let currentCtaWordIndex = 0;
+const ctaWordElement = document.getElementById("cta-word");
+
+if (ctaWordElement) {
+	setInterval(() => {
+		ctaWordElement.classList.add("fade-out");
+		setTimeout(() => {
+			currentCtaWordIndex = (currentCtaWordIndex + 1) % ctaWords.length;
+			ctaWordElement.textContent = ctaWords[currentCtaWordIndex];
+			ctaWordElement.classList.remove("fade-out");
+		}, 300);
 	}, 2000);
 }

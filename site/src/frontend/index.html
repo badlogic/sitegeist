@@ -35,13 +35,14 @@
                 <input
                     type="email"
                     id="email-input"
-                    class="flex-1 px-4 py-3 rounded-lg border border-input bg-transparent text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                    class="flex-1 px-4 py-3 rounded-lg border border-input bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                     placeholder="you@example.com"
                     required
                     autocomplete="email"
                 />
                 <button type="submit" class="signup-btn px-6 py-3 font-medium rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-foreground transition-all hover:shadow-lg hover:shadow-orange-500/20">Notify Me</button>
             </form>
+            <p class="text-xs text-muted-foreground mt-3">Your email will be deleted immediately after we notify you.</p>
 
             <div class="success-message" id="success-message">
                 ✓ Thanks! We'll notify you when we launch.
@@ -64,7 +65,7 @@
         <div class="mb-16">
             <h2 class="text-3xl font-bold text-center mb-12">What You Can Do</h2>
 
-            <div class="space-y-16 max-w-4xl mx-auto">
+            <div class="space-y-24 max-w-4xl mx-auto">
                 <!-- Use Case 1 -->
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div>
@@ -74,8 +75,8 @@
                         </p>
                     </div>
                     <div>
-                        <video controls class="w-full rounded-lg" preload="metadata">
-                            <source src="https://sink.mariozechner.at/api/share/0a4e9ce41c61aa054e919495de6eab4e/file/calendar.mp4" type="video/mp4">
+                        <video controls class="w-full rounded-lg" preload="none" poster="img/preview-research.png">
+                            <source src="https://sink.mariozechner.at/api/share/83f3db8896ac684f5f03ac1df237bc90/file/research.mp4" type="video/mp4">
                         </video>
                     </div>
                 </div>
@@ -85,11 +86,11 @@
                     <div class="md:order-2">
                         <h3 class="text-2xl font-semibold mb-4">Extract Data to Spreadsheets</h3>
                         <p class="text-muted-foreground mb-4">
-                            Scrape product listings, GitHub trending repos, search results—anything visible on a webpage. Export to Google Sheets with formatting, or download as CSV, Excel, or JSON.
+                            Scrape product listings, GitHub trending repos, search results—anything visible on a webpage. Export to Google Sheets with formatting, download as CSV, Excel, or JSON, or create an interactive visualization.
                         </p>
                     </div>
                     <div class="md:order-1">
-                        <video controls class="w-full rounded-lg" preload="metadata">
+                        <video controls class="w-full rounded-lg" preload="none" poster="img/preview-sheets.png">
                             <source src="https://sink.mariozechner.at/api/share/ba464b83bec1732b36bfeb4be4b5c847/file/sheets.mp4" type="video/mp4">
                         </video>
                     </div>
@@ -98,14 +99,14 @@
                 <!-- Use Case 3 -->
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div>
-                        <h3 class="text-2xl font-semibold mb-4">Analyze Videos and Get Transcripts</h3>
+                        <h3 class="text-2xl font-semibold mb-4">Fix Your Grammar and LinkedIn Game</h3>
                         <p class="text-muted-foreground mb-4">
-                            Extract YouTube transcripts with timestamps, break videos into beats with summaries, or get executive summaries. Works with any YouTube video.
+                            Catch typos and grammar mistakes in emails, social media posts, or anywhere on the web. Polish your LinkedIn posts before publishing. Works in real-time on any editable text.
                         </p>
                     </div>
                     <div>
-                        <video controls class="w-full rounded-lg" preload="metadata">
-                            <source src="https://sink.mariozechner.at/api/share/a8e41639ddbd2c353d0fb1feacc42125/file/google-calendar.mp4" type="video/mp4">
+                        <video controls class="w-full rounded-lg" preload="none" poster="img/preview-spelling.png">
+                            <source src="https://sink.mariozechner.at/api/share/356c8b5cd0cbb2ca6c3fc3a3e1e0e6ae/file/spelling.mp4" type="video/mp4">
                         </video>
                     </div>
                 </div>
@@ -113,19 +114,34 @@
                 <!-- Use Case 4 -->
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div class="md:order-2">
-                        <h3 class="text-2xl font-semibold mb-4">Compare Prices Across Stores</h3>
+                        <h3 class="text-2xl font-semibold mb-4">Summarize Videos, Ask Questions</h3>
                         <p class="text-muted-foreground mb-4">
-                            Teach Sitegeist how to search and extract products from any e-commerce site. Compare prices, packaging, and availability across multiple stores automatically.
+                            Extract YouTube transcripts with timestamps, break videos into beats with summaries, or get executive summaries. Ask questions about what's currently shown. Works with any YouTube video.
                         </p>
                     </div>
                     <div class="md:order-1">
-                        <video controls class="w-full rounded-lg" preload="metadata">
-                            <source src="https://sink.mariozechner.at/api/share/a8e41639ddbd2c353d0fb1feacc42125/file/google-calendar.mp4" type="video/mp4">
+                        <video controls class="w-full rounded-lg" preload="metadata" poster="img/preview-youtube.png">
+                            <source src="https://sink.mariozechner.at/api/share/c4f8ae0bac5be0ab6c210eff8f6667db/file/youtube.mp4" type="video/mp4">
                         </video>
                     </div>
                 </div>
 
                 <!-- Use Case 5 -->
+                <!--<div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4">Compare Prices Across Stores</h3>
+                        <p class="text-muted-foreground mb-4">
+                            Teach Sitegeist how to search and extract products from any e-commerce site. Compare prices, packaging, and availability across multiple stores automatically.
+                        </p>
+                    </div>
+                    <div>
+                        <video controls class="w-full rounded-lg" preload="metadata">
+                            <source src="https://sink.mariozechner.at/api/share/a8e41639ddbd2c353d0fb1feacc42125/file/google-calendar.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>-->
+
+                <!-- Use Case 6 -->
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div>
                         <h3 class="text-2xl font-semibold mb-4">Automate Social Media Engagement</h3>
@@ -134,13 +150,13 @@
                         </p>
                     </div>
                     <div>
-                        <video controls class="w-full rounded-lg" preload="metadata">
-                            <source src="https://sink.mariozechner.at/api/share/a8e41639ddbd2c353d0fb1feacc42125/file/google-calendar.mp4" type="video/mp4">
+                        <video controls class="w-full rounded-lg" preload="metadata" poster="img/preview-linkedin.png">
+                            <source src="https://sink.mariozechner.at/api/share/42d5a8d211d254745ff48d80a0d27b12/file/linkedin.mp4" type="video/mp4">
                         </video>
                     </div>
                 </div>
 
-                <!-- Use Case 6 -->
+                <!-- Use Case 7 -->
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div class="md:order-2">
                         <h3 class="text-2xl font-semibold mb-4">Turn Messages Into Calendar Events</h3>
@@ -154,15 +170,25 @@
                         </video>
                     </div>
                 </div>
+
+                <!-- Call to Action -->
+                <div class="text-center py-16">
+                    <p class="text-4xl md:text-5xl font-bold mb-3 inline-block bg-gradient-to-r from-orange-600 to-yellow-400 bg-clip-text text-transparent">Your turn.</p>
+                    <p class="text-xl md:text-2xl text-muted-foreground">What will you <span class="rotating-word" id="cta-word">automate</span>?</p>
+                </div>
             </div>
         </div>
 
         <!-- Features -->
         <div class="mb-16 max-w-3xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-12">We Don't Want Your Data</h2>
             <div class="grid md:grid-cols-2 gap-6">
                 <!-- Feature 1 -->
                 <div class="p-6 border border-border rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2">Use Your Browser</h3>
+                    <div class="flex items-center gap-3 mb-2">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                        <h3 class="text-lg font-semibold">Use Your Browser</h3>
+                    </div>
                     <p class="text-sm text-muted-foreground">
                         Works in Chrome, Edge, Brave, and other Chromium-based browsers. No custom browser required, no data mining.
                     </p>
@@ -170,7 +196,10 @@
 
                 <!-- Feature 2 -->
                 <div class="p-6 border border-border rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2">Your Choice of AI</h3>
+                    <div class="flex items-center gap-3 mb-2">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                        <h3 class="text-lg font-semibold">Your Choice of AI</h3>
+                    </div>
                     <p class="text-sm text-muted-foreground">
                         Use OpenAI, Anthropic, Google, OpenRouter, Groq, Cerebras, xAI, Z.ai, or self-hosted and local models via Ollama, LM Studio, llama.cpp, vLLM, SGLM.
                     </p>
@@ -178,7 +207,10 @@
 
                 <!-- Feature 3 -->
                 <div class="p-6 border border-border rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2">Privacy First</h3>
+                    <div class="flex items-center gap-3 mb-2">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+                        <h3 class="text-lg font-semibold">Privacy First</h3>
+                    </div>
                     <p class="text-sm text-muted-foreground">
                         Your settings, API keys, and chat history stay on your computer. Only your messages go to your chosen AI provider—configured to not retain or train on your data.
                     </p>
@@ -186,7 +218,10 @@
 
                 <!-- Feature 4 -->
                 <div class="p-6 border border-border rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2">Your Data, Your Control</h3>
+                    <div class="flex items-center gap-3 mb-2">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+                        <h3 class="text-lg font-semibold">Your Data, Your Control</h3>
+                    </div>
                     <p class="text-sm text-muted-foreground">
                         Export your entire chat history and settings at any time. Import them anywhere. No lock-in, no vendor control.
                     </p>
@@ -194,14 +229,17 @@
             </div>
         </div>
 
-        <!-- Skills and Artifacts -->
+        <!-- Skills, Artifacts, and Attachments -->
         <div class="mb-16 max-w-3xl mx-auto">
-            <h2 class="text-3xl font-bold text-center mb-12">Skills and Artifacts</h2>
+            <h2 class="text-3xl font-bold text-center mb-12">Skills, Artifacts, and Attachments</h2>
 
             <div class="grid md:grid-cols-2 gap-8">
                 <!-- Skills -->
                 <div class="p-8 border border-border rounded-lg">
-                    <h3 class="text-xl font-semibold mb-4">Skills</h3>
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>
+                        <h3 class="text-xl font-semibold">Skills</h3>
+                    </div>
                     <p class="text-muted-foreground mb-4">
                         Teach Sitegeist how to interact with any website once, save it as a "skill," and reuse it forever. Skills are site-specific automation libraries that load automatically when you visit matching domains.
                     </p>
@@ -212,12 +250,81 @@
 
                 <!-- Artifacts -->
                 <div class="p-8 border border-border rounded-lg">
-                    <h3 class="text-xl font-semibold mb-4">Artifacts</h3>
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                        <h3 class="text-xl font-semibold">Artifacts</h3>
+                    </div>
                     <p class="text-muted-foreground mb-4">
-                        Living documents that persist throughout your session. Create markdown notes, interactive HTML dashboards, or export data files. Update them as you work, and download when done.
+                        Living documents that persist throughout your session. Create markdown notes, interactive HTML dashboards, images, PDFs, or Excel files. Update them as you work, and download when done.
                     </p>
                     <p class="text-sm text-muted-foreground">
                         Example: Start a research note when investigating a topic. As Sitegeist navigates and extracts data, it continuously updates your note with findings and sources.
+                    </p>
+                </div>
+
+                <!-- Attachments -->
+                <div class="p-8 border border-border rounded-lg md:col-span-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"/></svg>
+                        <h3 class="text-xl font-semibold">Attachments</h3>
+                    </div>
+                    <p class="text-muted-foreground">
+                        Drop files right into the chat. PDFs, Office documents, images—Sitegeist reads them all. Ask questions about uploaded files, extract data, or combine information across multiple documents.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="mb-16 max-w-3xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-12">FAQ</h2>
+
+            <div class="space-y-6">
+                <!-- FAQ 1 -->
+                <div class="p-6 border border-border rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">How much does Sitegeist cost?</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Sitegeist will be a paid service with a monthly subscription in the $5-10 range. This includes access to the latest updates and maintained skills—libraries and prompts for popular websites that need constant updates as sites change. You can also create your own skills. You bring your own API keys for LLM providers or use free, open-weights local models at no charge. This pricing model allows us to keep working on Sitegeist without the wrong incentives.
+                    </p>
+                </div>
+
+                <!-- FAQ 2 -->
+                <div class="p-6 border border-border rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Do I need an account?</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Yes. You'll sign up with sitegeist.ai for license enforcement. We only store your payment info and license information—nothing else.
+                    </p>
+                </div>
+
+                <!-- FAQ 3 -->
+                <div class="p-6 border border-border rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">What browsers are supported?</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Desktop Chromium browsers: Chrome, Edge, Brave, and others. Firefox support is coming soon—we're waiting for them to implement the userScripts.execute() API.
+                    </p>
+                </div>
+
+                <!-- FAQ 4 -->
+                <div class="p-6 border border-border rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Can I use local models?</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Yes. Any OpenAI Chat Completions or Responses compatible endpoint works—Ollama, LM Studio, llama.cpp, vLLM, SGLM, and more.
+                    </p>
+                </div>
+
+                <!-- FAQ 5 -->
+                <div class="p-6 border border-border rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">What data is stored and sent?</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Everything stays local—your settings, API keys, and chat history. Only your chat messages go to your chosen LLM provider, configured to not retain or train on your data. Sitegeist will also make requests to sitegeist.ai to check that you have a valid license.
+                    </p>
+                </div>
+
+                <!-- FAQ 6 -->
+                <div class="p-6 border border-border rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Is Sitegeist open source?</h3>
+                    <p class="text-sm text-muted-foreground">
+                        No, Sitegeist is source available. As a Chrome extension, we must package all code in non-obfuscated form for Web Store reviewers. This means you (or a technical friend) can dissect it too. While Sitegeist is unlikely to become truly open-source, we ensure the sources we ship make it easy to review what Sitegeist is doing. You can also observe any and all network requests it performs.
                     </p>
                 </div>
             </div>

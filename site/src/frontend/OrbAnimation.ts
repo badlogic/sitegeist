@@ -91,7 +91,7 @@ export class OrbAnimation extends LitElement {
 		this.renderer.setClearColor(0x000000, 0);
 		this.renderer.domElement.style.backgroundColor = backgroundColor;
 		this.renderer.domElement.style.opacity = '0';
-		this.renderer.domElement.style.transition = 'opacity 2s ease-in-out';
+		this.renderer.domElement.style.transition = 'opacity 1s ease-in-out';
 		this.container.appendChild(this.renderer.domElement);
 
 		// Center camera and position for optimal view (3.8 prevents edge clipping)

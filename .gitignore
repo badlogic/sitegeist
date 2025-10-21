@@ -3,3 +3,6 @@ dist-chrome/
 *.log
 .DS_Store
 sitegeist-latest.zip
+.playwright-mcp/
+*.screenflow/
+*.mp4
