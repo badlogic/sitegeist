@@ -1,0 +1,108 @@
+@import "tailwindcss";
+@import "@mariozechner/mini-lit/styles/themes/default.css";
+/* biome-ignore lint/suspicious/noUnknownAtRules: fine*/
+@source "../../node_modules/@mariozechner/mini-lit/dist";
+
+/* Override border and input colors to be more visible in light theme */
+:root {
+   --border: oklch(0.85 0 0);
+   --input: oklch(0.85 0 0);
+}
+
+.dark {
+   --border: oklch(0.275 0 0);
+   --input: oklch(0.325 0 0);
+}
+
+/* Orb animation container */
+.orb-container {
+   width: 100%;
+   height: 100%;
+   aspect-ratio: 1 / 1;
+   margin: 0 auto;
+   display: block;
+   background-color: var(--background);
+   opacity: 1;
+   animation: none;
+}
+
+.orb-container canvas {
+   background-color: var(--background) !important;
+   max-width: 100%;
+}
+
+/* Rotating tagline word */
+.rotating-word {
+   display: inline-block;
+   min-width: 120px;
+   text-align: center;
+   font-weight: 600;
+   color: var(--foreground);
+}
+
+.rotating-word.block {
+   display: block;
+   width: 100%;
+}
+
+/* Signup button shimmer effect */
+.signup-btn {
+   position: relative;
+   overflow: hidden;
+}
+
+.signup-btn::before {
+   content: '';
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.4), transparent);
+   background-size: 200% 100%;
+   animation: shimmer 3s ease-in-out infinite;
+   opacity: 0;
+   transition: opacity 0.3s;
+}
+
+.signup-btn:hover::before {
+   opacity: 1;
+}
+
+@keyframes shimmer {
+   0%, 100% {
+      background-position: 200% 0;
+   }
+   50% {
+      background-position: -200% 0;
+   }
+}
+
+/* Success and error messages */
+.success-message {
+   display: none;
+   margin-top: 1rem;
+   padding: 1rem;
+   border-radius: 0.5rem;
+   background: rgba(46, 125, 50, 0.2);
+   border: 1px solid rgba(76, 175, 80, 0.5);
+   color: var(--foreground);
+}
+
+.success-message.visible {
+   display: block;
+}
+
+.error-message {
+   display: none;
+   margin-top: 1rem;
+   padding: 1rem;
+   border-radius: 0.5rem;
+   background: rgba(211, 47, 47, 0.2);
+   border: 1px solid rgba(244, 67, 54, 0.5);
+   color: var(--foreground);
+}
+
+.error-message.visible {
+   display: block;
+}

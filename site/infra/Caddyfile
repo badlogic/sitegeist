@@ -1,0 +1,21 @@
+:80 {
+	root * /srv
+
+	# Enable compression for all responses
+	encode {
+		zstd
+		gzip
+		minimum_length 256
+	}
+
+	# API proxy to backend
+	handle /api/* {
+		reverse_proxy backend:3000
+	}
+
+	# Handle everything else with SPA routing
+	handle {
+		try_files {path} {path}/ /index.html
+		file_server
+	}
+}

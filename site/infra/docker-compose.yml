@@ -1,0 +1,41 @@
+name: sitegeist-site
+
+services:
+  web:
+    image: caddy:alpine
+    restart: unless-stopped
+    labels:
+      caddy: sitegeist.ai
+      caddy.reverse_proxy: '{{upstreams 80}}'
+    volumes:
+      - ../dist/frontend:/srv:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - caddy-network
+      - default
+
+  backend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.backend
+    restart: unless-stopped
+    working_dir: /app
+    stop_grace_period: 5s
+    environment:
+      - PORT=3000
+      - DATA_DIR=/data
+      - NODE_ENV=production
+    volumes:
+      - ../package.json:/app/package.json:ro
+      - ../package-lock.json:/app/package-lock.json:ro
+      - ../dist/backend:/app/dist/backend:ro
+      - ../dist/shared:/app/dist/shared:ro
+      - backend_node_modules:/app/node_modules
+      - ../data:/data
+
+networks:
+  caddy-network:
+    external: true
+
+volumes:
+  backend_node_modules:

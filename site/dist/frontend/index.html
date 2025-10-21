@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" class="dark bg-background text-foreground">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitegeist - Your AI Companion for the Web</title>
+    <script>
+        // Force dark theme
+        localStorage.setItem("theme", "dark");
+        document.documentElement.classList.add("dark");
+    </script>
+  <script type="module" crossorigin src="/assets/index-Bz03mYHY.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-D0WhqUVa.css">
+</head>
+<body class="px-4 py-6 md:py-12">
+    <div class="max-w-4xl mx-auto w-full">
+        <!-- Header with Orb Animation -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl mb-8 font-bold">Sitegeist</h1>
+            <p class="text-xl md:text-2xl text-muted-foreground">
+                Your AI companion for the web to
+            </p>
+            <p class="text-3xl font-semibold mb-12 text-center">
+                <span class="rotating-word block" id="tagline-word">automate</span>
+            </p>
+            <div class="w-full max-w-[320px] aspect-square mx-auto mb-12">
+                <orb-animation class="block w-full h-full"></orb-animation>
+            </div>
+        </header>
+
+        <!-- Signup Card -->
+        <div class="p-8 mb-26 text-center">
+            <h2 class="text-2xl font-bold mb-4">Join the Waitlist</h2>
+
+            <form class="flex flex-col md:flex-row gap-3 max-w-md mx-auto" id="signup-form">
+                <input
+                    type="email"
+                    id="email-input"
+                    class="flex-1 px-4 py-3 rounded-lg border border-input bg-transparent text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                    placeholder="you@example.com"
+                    required
+                    autocomplete="email"
+                />
+                <button type="submit" class="signup-btn px-6 py-3 font-medium rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-foreground transition-all hover:shadow-lg hover:shadow-orange-500/20">Notify Me</button>
+            </form>
+
+            <div class="success-message" id="success-message">
+                ✓ Thanks! We'll notify you when we launch.
+            </div>
+
+            <div class="error-message" id="error-message">
+                <!-- Error message will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Explainer -->
+        <div class="mb-26 text-center max-w-2xl mx-auto">
+            <h2 class="text-3xl font-bold mb-6">What is Sitegeist?</h2>
+            <p class="text-lg text-muted-foreground mb-4">
+                An AI assistant that lives in your browser. Built for collaboration, not autonomy theater. You guide, it executes. Automate repetitive web tasks, extract data from any website, and transform it into whatever you need.
+            </p>
+        </div>
+
+        <!-- What You Can Do -->
+        <div class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-12">What You Can Do</h2>
+
+            <div class="space-y-16 max-w-4xl mx-auto">
+                <!-- Use Case 1 -->
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4">Research People and Companies</h3>
+                        <p class="text-muted-foreground mb-4">
+                            Search Google, LinkedIn, news sites, and more. Sitegeist navigates multiple pages, extracts relevant information, and compiles everything into a living document with sources.
+                        </p>
+                    </div>
+                    <div>
+                        <video controls class="w-full rounded-lg" preload="metadata">
+                            <source src="https://sink.mariozechner.at/api/share/0a4e9ce41c61aa054e919495de6eab4e/file/calendar.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+
+                <!-- Use Case 2 -->
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="md:order-2">
+                        <h3 class="text-2xl font-semibold mb-4">Extract Data to Spreadsheets</h3>
+                        <p class="text-muted-foreground mb-4">
+                            Scrape product listings, GitHub trending repos, search results—anything visible on a webpage. Export to Google Sheets with formatting, or download as CSV, Excel, or JSON.
+                        </p>
+                    </div>
+                    <div class="md:order-1">
+                        <video controls class="w-full rounded-lg" preload="metadata">
+                            <source src="https://sink.mariozechner.at/api/share/ba464b83bec1732b36bfeb4be4b5c847/file/sheets.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+
+                <!-- Use Case 3 -->
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4">Analyze Videos and Get Transcripts</h3>
+                        <p class="text-muted-foreground mb-4">
+                            Extract YouTube transcripts with timestamps, break videos into beats with summaries, or get executive summaries. Works with any YouTube video.
+                        </p>
+                    </div>
+                    <div>
+                        <video controls class="w-full rounded-lg" preload="metadata">
+                            <source src="https://sink.mariozechner.at/api/share/a8e41639ddbd2c353d0fb1feacc42125/file/google-calendar.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+
+                <!-- Use Case 4 -->
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="md:order-2">
+                        <h3 class="text-2xl font-semibold mb-4">Compare Prices Across Stores</h3>
+                        <p class="text-muted-foreground mb-4">
+                            Teach Sitegeist how to search and extract products from any e-commerce site. Compare prices, packaging, and availability across multiple stores automatically.
+                        </p>
+                    </div>
+                    <div class="md:order-1">
+                        <video controls class="w-full rounded-lg" preload="metadata">
+                            <source src="https://sink.mariozechner.at/api/share/a8e41639ddbd2c353d0fb1feacc42125/file/google-calendar.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+
+                <!-- Use Case 5 -->
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-4">Automate Social Media Engagement</h3>
+                        <p class="text-muted-foreground mb-4">
+                            Check your LinkedIn posts for unanswered comments and get AI-generated reply suggestions. Analyze WhatsApp conversations. All without leaving your browser.
+                        </p>
+                    </div>
+                    <div>
+                        <video controls class="w-full rounded-lg" preload="metadata">
+                            <source src="https://sink.mariozechner.at/api/share/a8e41639ddbd2c353d0fb1feacc42125/file/google-calendar.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+
+                <!-- Use Case 6 -->
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="md:order-2">
+                        <h3 class="text-2xl font-semibold mb-4">Turn Messages Into Calendar Events</h3>
+                        <p class="text-muted-foreground mb-4">
+                            Read direct messages from Bluesky, WhatsApp, or anywhere else. Extract meeting details like date, time, and location. Create Google Calendar events automatically—all without copy-pasting.
+                        </p>
+                    </div>
+                    <div class="md:order-1">
+                        <video controls class="w-full rounded-lg" preload="metadata" poster="img/preview-calendar.png">
+                            <source src="https://sink.mariozechner.at/api/share/0a4e9ce41c61aa054e919495de6eab4e/file/calendar.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="mb-16 max-w-3xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Feature 1 -->
+                <div class="p-6 border border-border rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Use Your Browser</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Works in Chrome, Edge, Brave, and other Chromium-based browsers. No custom browser required, no data mining.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="p-6 border border-border rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Your Choice of AI</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Use OpenAI, Anthropic, Google, OpenRouter, Groq, Cerebras, xAI, Z.ai, or self-hosted and local models via Ollama, LM Studio, llama.cpp, vLLM, SGLM.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="p-6 border border-border rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Privacy First</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Your settings, API keys, and chat history stay on your computer. Only your messages go to your chosen AI provider—configured to not retain or train on your data.
+                    </p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="p-6 border border-border rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2">Your Data, Your Control</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Export your entire chat history and settings at any time. Import them anywhere. No lock-in, no vendor control.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills and Artifacts -->
+        <div class="mb-16 max-w-3xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-12">Skills and Artifacts</h2>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Skills -->
+                <div class="p-8 border border-border rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4">Skills</h3>
+                    <p class="text-muted-foreground mb-4">
+                        Teach Sitegeist how to interact with any website once, save it as a "skill," and reuse it forever. Skills are site-specific automation libraries that load automatically when you visit matching domains.
+                    </p>
+                    <p class="text-sm text-muted-foreground">
+                        Example: Create a skill for your favorite store's search and product extraction. Next time you visit, Sitegeist already knows how to navigate and scrape.
+                    </p>
+                </div>
+
+                <!-- Artifacts -->
+                <div class="p-8 border border-border rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4">Artifacts</h3>
+                    <p class="text-muted-foreground mb-4">
+                        Living documents that persist throughout your session. Create markdown notes, interactive HTML dashboards, or export data files. Update them as you work, and download when done.
+                    </p>
+                    <p class="text-sm text-muted-foreground">
+                        Example: Start a research note when investigating a topic. As Sitegeist navigates and extracts data, it continuously updates your note with findings and sources.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-muted-foreground text-sm mt-12">
+            <p>© 2025 Sitegeist - Made by <a href="https://mariozechner.at" class="text-foreground underline">Mario Zechner</a></p>
+        </footer>
+    </div>
+
+    <!-- OrbAnimation Component -->
+
+    <!-- Form handling -->
+</body>
+</html>
