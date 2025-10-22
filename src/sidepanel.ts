@@ -21,7 +21,7 @@ import { History, Plus, Settings } from "lucide";
 import { SitegeistSessionListDialog } from "./dialogs/SessionListDialog.js";
 import { SkillsTab } from "./dialogs/SkillsTab.js";
 import { UserScriptsPermissionDialog } from "./dialogs/UserScriptsPermissionDialog.js";
-import { browserMessageTransformer } from "./message-transformer.js";
+import { browserMessageTransformer } from "./messages/message-transformer.js";
 import {
 	createNavigationMessage,
 	type NavigationMessage,
