@@ -1,0 +1,58 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Clone mini-lit
+        run: git clone --depth 1 https://github.com/badlogic/mini-lit.git ../mini-lit
+
+      - name: Clone pi-mono
+        run: git clone --depth 1 https://github.com/badlogic/pi-mono.git ../pi-mono
+
+      - name: Install mini-lit
+        run: cd ../mini-lit && npm install && npm run build
+
+      - name: Install pi-mono
+        run: cd ../pi-mono && npm install && npm run build
+
+      - name: Install sitegeist
+        run: npm install
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Create zip
+        run: |
+          cd dist-chrome
+          find . -name "*.map" -type f -delete
+          zip -r ../sitegeist.zip .
+
+      - name: Extract version
+        id: version
+        run: echo "version=$(node -p "require('./dist-chrome/manifest.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        run: |
+          gh release create ${{ github.ref_name }} sitegeist.zip \
+            --title "Sitegeist ${{ steps.version.outputs.version }}" \
+            --notes "Download \`sitegeist.zip\`, unzip, and load as unpacked extension in Chrome/Edge.
+
+          See [installation instructions](https://sitegeist.ai/install.html) for details." \
+            --latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -15,7 +15,7 @@
     <div class="max-w-4xl mx-auto w-full">
         <!-- Header with Orb Animation -->
         <header class="text-center mb-12">
-            <h1 class="text-4xl md:text-5xl mb-8 font-bold">Sitegeist</h1>
+            <a href="/" class="inline-block"><h1 class="text-4xl md:text-5xl mb-8 font-bold hover:text-orange-400 transition-colors">Sitegeist</h1></a>
             <p class="text-xl md:text-2xl text-muted-foreground">
                 Your AI companion for the web to
             </p>
@@ -27,30 +27,10 @@
             </div>
         </header>
 
-        <!-- Signup Card -->
+        <!-- Download -->
         <div class="p-8 mb-26 text-center">
-            <h2 class="text-2xl font-bold mb-4">Join the <span class="inline-block bg-gradient-to-r from-orange-600 to-yellow-400 bg-clip-text text-transparent">Waitlist</span></h2>
-
-            <form class="flex flex-col md:flex-row gap-3 max-w-md mx-auto" id="signup-form">
-                <input
-                    type="email"
-                    id="email-input"
-                    class="flex-1 px-4 py-3 rounded-lg border border-input bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-                    placeholder="you@example.com"
-                    required
-                    autocomplete="email"
-                />
-                <button type="submit" class="signup-btn px-6 py-3 font-medium rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-foreground transition-all hover:shadow-lg hover:shadow-orange-500/20">Notify Me</button>
-            </form>
-            <p class="text-xs text-muted-foreground mt-3">Your email will be deleted immediately after we notify you.</p>
-
-            <div class="success-message" id="success-message">
-                ✓ Thanks! We'll notify you when we launch.
-            </div>
-
-            <div class="error-message" id="error-message">
-                <!-- Error message will be inserted here -->
-            </div>
+            <a href="https://github.com/badlogic/sitegeist/releases/latest" target="_blank" class="inline-block px-8 py-4 text-lg font-medium rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-foreground transition-all hover:shadow-lg hover:shadow-orange-500/20">Download from GitHub</a>
+            <p class="text-xs text-muted-foreground mt-3"><a href="install.html" class="underline hover:text-foreground">Installation instructions</a></p>
         </div>
 
         <!-- Explainer -->
@@ -202,26 +182,8 @@
                     <p class="text-4xl md:text-5xl font-bold mb-3 inline-block bg-gradient-to-r from-orange-600 to-yellow-400 bg-clip-text text-transparent">Your turn.</p>
                     <p class="text-xl md:text-2xl text-muted-foreground mb-8">What will you <span class="rotating-word" id="cta-word">automate</span>?</p>
 
-                    <!-- Signup Form -->
-                    <form class="flex flex-col md:flex-row gap-3 max-w-md mx-auto" id="signup-form-bottom">
-                        <input
-                            type="email"
-                            class="flex-1 px-4 py-3 rounded-lg border border-input bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-                            placeholder="you@example.com"
-                            required
-                            autocomplete="email"
-                        />
-                        <button type="submit" class="signup-btn px-6 py-3 font-medium rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-foreground transition-all hover:shadow-lg hover:shadow-orange-500/20">Notify Me</button>
-                    </form>
-                    <p class="text-xs text-muted-foreground mt-3">Your email will be deleted immediately after we notify you.</p>
-
-                    <div class="success-message" id="success-message-bottom">
-                        ✓ Thanks! We'll notify you when we launch.
-                    </div>
-
-                    <div class="error-message" id="error-message-bottom">
-                        <!-- Error message will be inserted here -->
-                    </div>
+                    <a href="https://github.com/badlogic/sitegeist/releases/latest" target="_blank" class="inline-block px-8 py-4 text-lg font-medium rounded-lg bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-foreground transition-all hover:shadow-lg hover:shadow-orange-500/20">Download from GitHub</a>
+                    <p class="text-xs text-muted-foreground mt-3"><a href="install.html" class="underline hover:text-foreground">Installation instructions</a></p>
                 </div>
             </div>
         </div>
@@ -594,18 +556,16 @@
         </div>
 
         <!-- Footer -->
-        <footer class="text-center text-muted-foreground text-sm mt-12">
-            <p>© 2025 Sitegeist - Made by <a href="https://mariozechner.at" class="text-foreground underline">Mario Zechner</a></p>
-            <p class="text-xs text-muted-foreground mt-4">
-                This page respects your privacy by not using cookies or similar technologies and not collecting personal information, except waitlist emails you submit.
-            </p>
+        <footer class="text-center text-muted-foreground text-xs mt-12">
+            <p>Made by <a href="https://mariozechner.at" class="text-foreground underline">Mario Zechner</a></p>
+            <p class="mt-2">This page respects your privacy by not using cookies or similar technologies and not collecting personal information.</p>
         </footer>
     </div>
 
     <!-- OrbAnimation Component -->
     <script type="module" src="OrbAnimation.ts"></script>
 
-    <!-- Form handling -->
+    <!-- Tagline rotation and FAQ -->
     <script type="module" src="main.ts"></script>
 </body>
 </html>
