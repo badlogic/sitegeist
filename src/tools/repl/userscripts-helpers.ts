@@ -155,83 +155,167 @@ export function validateBrowserJavaScript(code: string): {
 }
 
 // Wrapper function that executes user code - will be converted to string with .toString()
-async function wrapperFunction() {
+// Will be wrapped as IIFE to avoid top-level await (not supported in userScripts context)
+async function wrapperIIFE() {
 	let timeoutId: number;
 
 	// Injection marker (survives .toString())
 	("__INJECT_PROVIDERS_HERE__");
 
+	// Inject cancellation flag for cooperative cancellation
+	// @ts-expect-error
+	window.__sitegeist_cancelled = false;
+
+	// Save original Promise constructor before wrapping
+	// @ts-expect-error
+	const OriginalPromise = window.Promise;
+
+	// Wrap Promise constructor to inject cancellation checks into all async operations
+	// This makes ANY await statement a potential cancellation point
+	// @ts-expect-error
+	window.Promise = (executor) =>
+		new OriginalPromise((resolve, reject) => {
+			// Check cancellation before starting the executor
+			// @ts-expect-error
+			if (window.__sitegeist_cancelled) {
+				reject(new Error("Script execution was cancelled"));
+				return;
+			}
+
+			// Wrap resolve to check cancellation before resolving
+			const wrappedResolve = (value: any) => {
+				// @ts-expect-error
+				if (window.__sitegeist_cancelled) {
+					reject(new Error("Script execution was cancelled"));
+				} else {
+					resolve(value);
+				}
+			};
+
+			// Wrap reject to pass through
+			const wrappedReject = (reason: any) => {
+				reject(reason);
+			};
+
+			try {
+				executor(wrappedResolve, wrappedReject);
+			} catch (e) {
+				reject(e);
+			}
+		});
+
+	// Copy static methods from original Promise
+	// @ts-expect-error
+	window.Promise.resolve = OriginalPromise.resolve.bind(OriginalPromise);
+	// @ts-expect-error
+	window.Promise.reject = OriginalPromise.reject.bind(OriginalPromise);
+	// @ts-expect-error
+	window.Promise.all = OriginalPromise.all.bind(OriginalPromise);
+	// @ts-expect-error
+	window.Promise.race = OriginalPromise.race.bind(OriginalPromise);
+	// @ts-expect-error
+	window.Promise.allSettled = OriginalPromise.allSettled.bind(OriginalPromise);
+	// @ts-expect-error
+	window.Promise.any = OriginalPromise.any.bind(OriginalPromise);
+
+	// Inject yield helper for explicit cancellation points (still useful for tight loops)
+	// @ts-expect-error
+	window.__sitegeist_yield = () => {
+		return new Promise((resolve, reject) => {
+			setTimeout(() => {
+				// @ts-expect-error
+				if (window.__sitegeist_cancelled) {
+					reject(new Error("Script execution was cancelled"));
+				} else {
+					resolve();
+				}
+			}, 0);
+		});
+	};
+
 	const cleanup = () => {
 		if (timeoutId) clearTimeout(timeoutId);
+		// @ts-expect-error
+		delete window.__sitegeist_yield;
+		// @ts-expect-error
+		delete window.__sitegeist_cancelled;
+		// Restore original Promise constructor
+		// @ts-expect-error
+		window.Promise = OriginalPromise;
 		// Runtime provider cleanup will be handled automatically
 	};
 
-	try {
-		// Set timeout
-		const timeoutPromise = new Promise((_, reject) => {
-			timeoutId = setTimeout(() => {
-				reject(new Error("Execution timeout: Code did not complete within 120 seconds"));
-			}, 120000) as unknown as number;
-		});
+	// Execute the user code directly (no setTimeout wrapper)
+	// The Promise returned here will keep the execution tracked in Chromium's map
+	// until it resolves, allowing terminate() to work properly
+	return (async () => {
+		try {
+			// Set execution timeout (30 seconds)
+			const timeoutPromise = new Promise((_, reject) => {
+				timeoutId = setTimeout(() => {
+					reject(new Error("Execution timeout: Code did not complete within 30 seconds"));
+				}, 30000) as unknown as number;
+			});
 
-		// Execute user code and capture the last expression value
-		// USER_CODE_PLACEHOLDER will be replaced with the actual async function containing user code
-		// @ts-expect-error
-		const userCodeFunc = USER_CODE_PLACEHOLDER;
-		const codePromise = userCodeFunc();
-
-		// Race between execution and timeout
-		const lastValue = await Promise.race([codePromise, timeoutPromise]);
-
-		// Call completion callbacks before returning (success path)
-		if (
+			// Execute user code and capture the last expression value
+			// USER_CODE_PLACEHOLDER will be replaced with the actual async function containing user code
 			// @ts-expect-error
-			window.__completionCallbacks &&
-			// @ts-expect-error
-			window.__completionCallbacks.length > 0
-		) {
-			try {
-				await Promise.race([
-					// @ts-expect-error
-					Promise.all(window.__completionCallbacks.map((cb) => cb(true))),
-					new Promise((_, reject) => setTimeout(() => reject(new Error("Completion timeout")), 5000)),
-				]);
-			} catch (e) {
-				console.error("Completion callback error:", e);
+			const userCodeFunc = USER_CODE_PLACEHOLDER;
+			const codePromise = userCodeFunc();
+
+			// Race between execution and timeout
+			const lastValue = await Promise.race([codePromise, timeoutPromise]);
+
+			// Call completion callbacks before returning (success path)
+			if (
+				// @ts-expect-error
+				window.__completionCallbacks &&
+				// @ts-expect-error
+				window.__completionCallbacks.length > 0
+			) {
+				try {
+					await Promise.race([
+						// @ts-expect-error
+						Promise.all(window.__completionCallbacks.map((cb) => cb(true))),
+						new Promise((_, reject) => setTimeout(() => reject(new Error("Completion timeout")), 5000)),
+					]);
+				} catch (e) {
+					console.error("Completion callback error:", e);
+				}
 			}
-		}
 
-		cleanup();
-		return {
-			success: true,
-			lastValue: lastValue,
-		};
-	} catch (error: any) {
-		// Call completion callbacks before returning (error path)
-		if (
-			// @ts-expect-error
-			window.__completionCallbacks &&
-			// @ts-expect-error
-			window.__completionCallbacks.length > 0
-		) {
-			try {
-				await Promise.race([
-					// @ts-expect-error
-					Promise.all(window.__completionCallbacks.map((cb) => cb(false))),
-					new Promise((_, reject) => setTimeout(() => reject(new Error("Completion timeout")), 5000)),
-				]);
-			} catch (e) {
-				console.error("Completion callback error:", e);
+			cleanup();
+			return {
+				success: true,
+				lastValue: lastValue,
+			};
+		} catch (error: any) {
+			// Call completion callbacks before returning (error path)
+			if (
+				// @ts-expect-error
+				window.__completionCallbacks &&
+				// @ts-expect-error
+				window.__completionCallbacks.length > 0
+			) {
+				try {
+					await Promise.race([
+						// @ts-expect-error
+						Promise.all(window.__completionCallbacks.map((cb) => cb(false))),
+						new Promise((_, reject) => setTimeout(() => reject(new Error("Completion timeout")), 5000)),
+					]);
+				} catch (e) {
+					console.error("Completion callback error:", e);
+				}
 			}
-		}
 
-		cleanup();
-		return {
-			success: false,
-			error: error.message,
-			stack: error.stack,
-		};
-	}
+			cleanup();
+			return {
+				success: false,
+				error: error.message,
+				stack: error.stack,
+			};
+		}
+	})();
 }
 
 /**
@@ -245,8 +329,8 @@ export function buildWrapperCode(
 	sandboxId: string,
 	args?: any[],
 ): string {
-	// Start with wrapper function
-	let code = `(${wrapperFunction.toString()})`;
+	// Start with wrapper function (will be made into IIFE below)
+	let code = wrapperIIFE.toString();
 
 	// Inject safeguards at the beginning if enabled (not implemented yet)
 	// if (enableSafeguards) { ... }
@@ -296,6 +380,8 @@ export function buildWrapperCode(
 		code = code.replace(/USER_CODE_PLACEHOLDER/, userCode);
 	}
 
-	// Call the function immediately
-	return `${code}()`;
+	// CRITICAL: Wrap as IIFE (Immediately Invoked Function Expression)
+	// Pattern: (async function() {...})() - returns Promise that chrome.userScripts.execute() waits for
+	// NO top-level await needed - userScripts context doesn't support it
+	return `(${code})()`;
 }

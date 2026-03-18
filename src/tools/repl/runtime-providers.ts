@@ -196,6 +196,10 @@ export class BrowserJsRuntimeProvider implements SandboxRuntimeProvider {
 		// Generate execution ID for cancellation support (only if terminate is available)
 		const executionId = supportsTerminate ? crypto.randomUUID() : undefined;
 
+		console.log(
+			`[BrowserJsRuntimeProvider] Cancellation mode: ${supportsTerminate ? "Hybrid (cooperative + V8 termination)" : "Cooperative only (Chrome < 138)"}`,
+		);
+
 		// Track this execution for potential cancellation
 		if (executionId) {
 			this.activeExecutions.set(sandboxId, {
@@ -205,21 +209,47 @@ export class BrowserJsRuntimeProvider implements SandboxRuntimeProvider {
 			});
 		}
 
-		// Set up abort handler if signal is available and terminate is supported
-		const abortHandler = executionId
-			? async () => {
-					console.log(`[BrowserJsRuntimeProvider] Aborting execution ${executionId}`);
-					try {
-						// @ts-expect-error - terminate is not yet in the type definitions
-						await chrome.userScripts.terminate(tab.id!, executionId);
-						console.log(`[BrowserJsRuntimeProvider] Successfully terminated execution ${executionId}`);
-					} catch (e) {
-						console.error(`[BrowserJsRuntimeProvider] Failed to terminate execution:`, e);
-					}
-				}
-			: undefined;
+		// Set up abort handler with hybrid approach:
+		// 1. Cooperative cancellation (Promise wrapping) - always works
+		// 2. V8 termination (Chrome API) - works now that execution stays tracked
+		let abortHandler: (() => Promise<void>) | undefined;
+		if (abortSignal) {
+			abortHandler = async () => {
+				console.log(`[BrowserJsRuntimeProvider] Aborting execution (hybrid approach)`);
+				try {
+					// Step 1: Set cooperative cancellation flag (guaranteed to work)
+					await chrome.userScripts.execute({
+						js: [{ code: "window.__sitegeist_cancelled = true;" }],
+						target: { tabId: tab.id!, allFrames: false },
+						world: "USER_SCRIPT",
+						worldId: FIXED_WORLD_ID,
+						injectImmediately: true,
+					});
+					console.log(`[BrowserJsRuntimeProvider] Set cancellation flag`);
 
-		if (abortSignal && abortHandler) {
+					// Step 2: Try V8 termination if available (Chrome 138+)
+					// This is a backup method - cooperative cancellation above is primary
+					if (executionId && supportsTerminate) {
+						try {
+							// @ts-expect-error - terminate is not yet in the type definitions
+							await chrome.userScripts.terminate(tab.id!, executionId);
+							console.log(`[BrowserJsRuntimeProvider] V8 termination called for ${executionId}`);
+						} catch (e) {
+							// Expected errors:
+							// - "execution_id not found in map" (cooperative cancellation was faster)
+							// - Script already completed naturally
+							console.debug(`[BrowserJsRuntimeProvider] V8 termination not needed (script already stopped):`, e);
+						}
+					} else if (!supportsTerminate) {
+						console.debug(
+							`[BrowserJsRuntimeProvider] V8 termination not available (Chrome < 138), using cooperative cancellation only`,
+						);
+					}
+				} catch (e) {
+					console.error(`[BrowserJsRuntimeProvider] Failed to abort:`, e);
+				}
+			};
+
 			abortSignal.addEventListener("abort", abortHandler);
 		}
 

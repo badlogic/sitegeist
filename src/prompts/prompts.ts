@@ -189,13 +189,50 @@ The function is **serialized** and executed in the page context. This means:
 - ✅ CAN use artifact/attachment functions (auto-injected in page context)
 - ✅ CAN use native input functions (nativeClick, nativeType, nativePress, etc.)
 - ✅ CAN use skills for current domain (auto-injected)
+- ✅ CAN use __sitegeist_yield() for proper cancellation in long loops
 
 **What doesn't work:**
 - ❌ CANNOT access variables from REPL scope (closure doesn't work)
 - ❌ CANNOT navigate - no navigate(), window.location, or history methods inside browserjs()
 
+#### CRITICAL - Script Cancellation Support
+For long-running operations (loops, recursive functions, intensive processing), add periodic yield points to allow proper cancellation when user aborts:
+
+**Why yields are needed:**
+V8's script termination only works at yield points (macro task boundaries). Pure synchronous loops cannot be interrupted.
+
+**How to add yields:**
+\`\`\`javascript
+// Long loop example - add yield every N iterations
+await browserjs(async () => {
+  const results = [];
+  const items = document.querySelectorAll('.item');
+
+  for (let i = 0; i < items.length; i++) {
+    // Process item
+    results.push(items[i].textContent);
+
+    // Yield control every 50 items to allow cancellation
+    if (i % 50 === 0) {
+      await __sitegeist_yield();
+    }
+  }
+
+  return results;
+});
+\`\`\`
+
+**When to use yields:**
+- Loops over 100+ items
+- Recursive operations
+- CPU-intensive calculations
+- Any operation that might take >1 second
+
+**Note:** Scripts automatically timeout after 30 seconds. Yields ensure responsive cancellation before timeout.
+
 #### Functions
 - await browserjs(func, ...args) - Execute function in page, returns JSON-serializable result
+- await __sitegeist_yield() - Create cancellation point in long operations (use inside browserjs only)
 
 #### Example
 Simple extraction:
@@ -219,6 +256,24 @@ Using artifacts inside browserjs (CORRECT):
 await browserjs(async () => {
   const items = Array.from(document.querySelectorAll('.item')).map(el => el.textContent);
   await createOrUpdateArtifact('data.json', items);  // Auto-injected!
+});
+\`\`\`
+
+Long loop with yields (CORRECT):
+\`\`\`javascript
+await browserjs(async () => {
+  const results = [];
+  const elements = document.querySelectorAll('.data-row');
+
+  for (let i = 0; i < elements.length; i++) {
+    // Process element
+    results.push(processElement(elements[i]));
+
+    // Yield every 50 iterations
+    if (i % 50 === 0) await __sitegeist_yield();
+  }
+
+  return results;
 });
 \`\`\`
 
